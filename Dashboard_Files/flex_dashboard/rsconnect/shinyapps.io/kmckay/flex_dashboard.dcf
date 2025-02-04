@@ -1,0 +1,10 @@
+name: flex_dashboard
+title:
+username: kmckay
+account: kmckay
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9791141
+bundleId: 7654787
+url: https://kmckay.shinyapps.io/flex_dashboard/
+version: 1
