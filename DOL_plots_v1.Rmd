@@ -1,0 +1,200 @@
+---
+title: "DOL_plots_v1.Rmd"
+author: "K. McKay"
+date: "2023-08-03"
+output:
+  html_document:
+    df_print: paged
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(XML)
+library(xml2)
+library(tidyverse)
+library(tibble)
+library(ggplot2)
+```
+
+
+
+
+```{r fig.align="center", echo = FALSE,fig.width = 30}
+
+load("DOL_data.Rda")
+
+# Load necessary packages
+library(ggplot2)
+
+################## PERSONNEL AND COST SECTION ##########################
+
+# bar chart for TotalFullTimeStaffQuantity
+ggplot(foia_data$PersonnelAndCostSection, aes(x=foia_data$PersonnelAndCostSection$FY, y=as.numeric(as.character(foia_data$PersonnelAndCostSection$TotalFullTimeStaffQuantity)), fill=foia_data$PersonnelAndCostSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("Total Full Time Staff") +
+  ggtitle("DOL Full Time Staff") +
+  labs(fill = "Component") +
+  theme_minimal(base_size = 20)
+
+# bar chart for ProcessingCostAmount WITH FACET GRID
+ggplot(foia_data$PersonnelAndCostSection, aes(x=foia_data$PersonnelAndCostSection$FY, y=as.numeric(as.character(foia_data$PersonnelAndCostSection$ProcessingCostAmount)), fill=foia_data$PersonnelAndCostSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("Processing Cost") +
+  ggtitle("DOL Processing Costs") +
+  labs(fill = "Component") +
+  theme_minimal(base_size = 20) + 
+  facet_grid(. ~ foia_data$PersonnelAndCostSection$OrganizationAbbreviationText)
+
+# bar chart for ProcessingCostAmount WITHOUT FACET GRID
+ggplot(foia_data$PersonnelAndCostSection, aes(x=foia_data$PersonnelAndCostSection$FY, y=as.numeric(as.character(foia_data$PersonnelAndCostSection$ProcessingCostAmount)), fill=foia_data$PersonnelAndCostSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("Processing Cost") +
+  ggtitle("DOL Processing Costs") +
+  labs(fill = "Component") +
+  theme_minimal(base_size = 20)
+
+# bars for total FOIA costs over time
+ggplot(foia_data$PersonnelAndCostSection, aes(x=foia_data$PersonnelAndCostSection$FY, y=as.numeric(as.character(foia_data$PersonnelAndCostSection$TotalCostAmount)), fill=foia_data$PersonnelAndCostSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("Total FOIA Costs (USD)") +
+  ggtitle("DOL FOIA Costs") +
+  theme_minimal(base_size = 20) +
+  labs(fill = "Component") +
+  geom_text(aes(label = foia_data$PersonnelAndCostSection$TotalCostAmount), position = position_dodge(width = 0.9), vjust = 0.05, angle = 90)
+# fix data labels
+  
+
+# grouped bars for PersonnelAndCostSection
+
+#PC_FY <- (rep(foia_data$PersonnelAndCostSection$FullTimeEmployeeQuantity$FY) rep(foia_data$PersonnelAndCostSection$EquivalentFullTimeEmployeeQuantity$FY), rep(foia_data$PersonnelAndCostSection$TotalFullTimeStaffQuantity$FY)))
+
+#PC <- rep("Full Time Employee Quantity", "Equivalent Full Time Employee Quantity", "Total Full Time Staff Quantity"))
+
+#value <- abs(rnorm(foia_data$PersonnelAndCostSection$FullTimeEmployeeQuantity, foia_data$PersonnelAndCostSection$EquivalentFullTimeEmployeeQuantity, foia_data$PersonnelAndCostSection$TotalFullTimeStaffQuantity))
+
+################# BACKLOG SECTION ######################
+
+# grouped bars for BacklogSection
+
+ggplot(foia_data$BacklogSection, aes(x=foia_data$BacklogSection$FY, y=as.numeric(as.character(foia_data$BacklogSection$BackloggedRequestQuantity)), fill=foia_data$BacklogSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") + ylab("Backlogged Requests") +
+  ggtitle("DHS Backlogged Requests") +
+  theme_minimal(base_size = 20) +
+  labs(fill = "Component") +
+  geom_text(aes(label = foia_data$BacklogSection$BackloggedRequestQuantity), position = position_dodge(width = 0.9), vjust = -0.05, angle = 90)
+  
+# add in something that says NONE vertically if an agency has 0 backlog?
+# make a theme variable that loads in sizes of titles, etc. for repeatability purposes??
+# adding NA bar? is it possible to do this by component?
+
+# grouped bars for BacklogSection, WITH FACET GRID
+ggplot(foia_data$BacklogSection, aes(x=foia_data$BacklogSection$FY, y=as.numeric(as.character(foia_data$BacklogSection$BackloggedRequestQuantity)), fill=foia_data$BacklogSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") + ylab("Backlogged Requests") +
+  ggtitle("DHS Backlogged Requests") +
+  theme_minimal(base_size = 20) +
+  labs(fill = "Component") +
+  facet_grid(. ~ foia_data$BacklogSection$OrganizationAbbreviationText)
+
+################# PROCESSING STATISTICS SECTION ##################
+
+# grouped bars, Processed Requests, all components
+ggplot(foia_data$ProcessedRequestSection, aes(x=foia_data$ProcessedRequestSection$FY, y=as.numeric(as.character(foia_data$ProcessedRequestSection$ProcessingStatisticsProcessedQuantity)), fill=foia_data$ProcessedRequestSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("Processed Requests") +
+  ggtitle("Processed Requests") +
+  labs(fill = "Component") +
+  theme_minimal(base_size = 20)
+
+# grouped bars, Received vs. Processed for a particular component (how do i do this?)
+
+
+# received requests for components
+ggplot(foia_data$ProcessedRequestSection, aes(x=foia_data$ProcessedRequestSection$FY, y=as.numeric(as.character(foia_data$ProcessedRequestSection$ProcessingStatisticsReceivedQuantity)), fill=foia_data$ProcessedRequestSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("Number of Requests") +
+  ggtitle("Received Requests") +
+  labs(fill = "Component") +
+  theme_minimal(base_size = 20)
+
+
+# processed response time median, average, lowest, highest for a particular component???
+# ggplot(foia_data$ProcesedRequestSection, aes(x=foia_data$ProcessedRequestSection$FY[["OIG"]], y=as.numeric(as.character(foia_data$ProcessedRequestSection[["OIG"]])), fill=foia_data$ProcessedRequestSection$ProcessingStatisticsPendingAtStartQuantity[["OIG"]], foia_data$ProcessedRequestSection$ProcessingStatisticsPendingAtEndQuantity[["OIG"]], foia_data$ProcessedRequestSection$ProcessingStatisticsReceivedQuantity[["OIG"]], foia_data$ProcessedRequestSection$ProcessingStatisticsProcessedQuantity[["OIG"]])) + geom_bar(stat = "identity", position = 'dodge') + xlab("Fiscal Year (FY)") + ylab("Number of Requests") + ggtitle ("OIG Processing Statistics") + theme_minimal(base_size = 18)
+
+# pending at start for all components
+ggplot(foia_data$ProcessedRequestSection, aes(x=foia_data$ProcessedRequestSection$FY, y=as.numeric(as.character(foia_data$ProcessedRequestSection$ProcessingStatisticsPendingAtStartQuantity)), fill=foia_data$ProcessedRequestSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("Number of Requests") +
+  ggtitle("Requests Pending at FY Start") +
+  labs(fill = "Component") +
+  theme_minimal(base_size = 20)
+
+# pending at end for all components
+ggplot(foia_data$ProcessedRequestSection, aes(x=foia_data$ProcessedRequestSection$FY, y=as.numeric(as.character(foia_data$ProcessedRequestSection$ProcessingStatisticsPendingAtEndQuantity)), fill=foia_data$ProcessedRequestSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("Number of Requests") +
+  ggtitle("Requests Pending at FY End") +
+  labs(fill = "Component") +
+  theme_minimal(base_size = 20)
+
+
+# trying to make a for loop that makes plots for each column of a section (e.g. PendingAtStartQuantity and PendingAtEndQuantity etc. for ProcessedRequestSection)
+
+# processed_request_section_variables <- list(foia_data$ProcessedRequestSection$ProcessingStatisticsPendingAtStartQuantity, foia_data$ProcessedRequestSection$ProcessingStatisticsPendingAtEndQuantity, foia_data$ProcessedRequestSection$ProcessingStatisticsReceivedQuantity, foia_data$ProcessedRequestSection$ProcessingStatisticsPendingAtEndQuantity)
+
+# for (i in processed_request_section_variables){
+  # DHS_PR_plots <- ggplot(foia_data$ProcesedRequestSection, aes(x=foia_data$ProcessedRequestSection$FY, y=as.numeric(as.character(i)), fill=foia_data$ProcessedRequestSection$OrganizationAbbreviationText)) + geom_bar(stat = "identity", position = 'dodge') + xlab("Fiscal Year (FY)") + ylab("Number of Requests") + ggtitle(i) + theme_minimal(base_size = 18)
+# }
+
+######### EXPEDITED PROCESSING SECTION ###########
+# expedited processing requests granted
+ggplot(foia_data$ExpeditedProcessingSection, aes(x=foia_data$ExpeditedProcessingSection$FY, y=as.numeric(as.character(foia_data$ExpeditedProcessingSection$RequestGrantedQuantity)), fill=foia_data$ExpeditedProcessingSection$OrganizationAbbreviationText)) + 
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("Requests Granted") +
+  ggtitle("DOL Expedited Processing Requests Granted") +
+  labs(fill = "Component") +
+  theme_minimal(base_size = 20) +
+  facet_grid(. ~foia_data$ExpeditedProcessingSection$OrganizationAbbreviationText)
+
+# expedited processing requests denied
+ggplot(foia_data$ExpeditedProcessingSection, aes(x=foia_data$ExpeditedProcessingSection$FY, y=as.numeric(as.character(foia_data$ExpeditedProcessingSection$RequestDeniedQuantity)), fill=foia_data$ExpeditedProcessingSection$OrganizationAbbreviationText)) + 
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("Requests Granted") +
+  ggtitle("DOL Expedited Processing Requests Denied") +
+  labs(fill = "Component") +
+  theme_minimal(base_size = 20) +
+  facet_grid(. ~foia_data$ExpeditedProcessingSection$OrganizationAbbreviationText)
+
+# 10-day acknowledgement compliance
+ggplot(foia_data$ExpeditedProcessingSection, aes(x=foia_data$ExpeditedProcessingSection$FY, y=as.numeric(as.character(foia_data$ExpeditedProcessingSection$AdjudicationWithinTenDaysQuantity)), fill=foia_data$ExpeditedProcessingSection$OrganizationAbbreviationText)) +
+  geom_bar(stat = "identity", position = 'dodge') +
+  xlab("Fiscal Year (FY)") +
+  ylab("# of Requests in 10-day Acknowledgement Period") +
+  ggtitle("DOL 10-day Acknowledgement Compliance") +
+  labs(fill = "Component") +
+  theme_minimal(base_size = 20) +
+  facet_grid(. ~foia_data$ExpeditedProcessingSection$OrganizationAbbreviationText)
+  
+  
+
+
+
+
+
+
+```
+
