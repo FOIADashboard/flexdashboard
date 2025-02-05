@@ -1,8 +1,8 @@
-## Deportation Research Clinic FOIA Dashboard
+# Deportation Research Clinic FOIA Dashboard
 
 
 
-# How To Update the Dashboard (Note: Subject to Modification as we transpose fully to Github & Notion)
+## How To Update the Dashboard (Note: Subject to Modification as we transpose fully to Github & Notion)
 - Download **R 4.33** and **RStudio**.  
 - Download all files from the **FOIA Dashboard Box folder** to your computer:  
   - [FOIA Dashboard Files](https://app.box.com/s/f4ffqpgph38z530kds6ve2dfyuc0ot1g)  
