@@ -31,6 +31,17 @@ load_budget_data <- function(input_data, data_dir = ".") {
   return(read.csv(file.path(data_dir, filenames[input_data])))
 }
 
+load_ratios_data <- function(input_data, data_dir = ".") {
+  filenames <- c(
+    "DHS" = "Homeland_ratios.csv",
+    "DOL" = "Labor_ratios.csv",
+    "DOJ" = "Justice_ratios.csv",
+    "HHS" = "Human_services_ratios.csv",
+    "DOS" = "State_ratios.csv"
+  )
+  return(read.csv(file.path(data_dir, filenames[input_data])))
+}
+
 plot_single_column <- function(data, column_name, selected_components, selected_years, manual_titles = NULL, debug = FALSE) {
   
   if (debug) {

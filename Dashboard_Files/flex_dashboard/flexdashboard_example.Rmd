@@ -657,11 +657,19 @@ agencyBudgets_data_list <- list(
   agency_id = "budgetAgency",
   component_id = "budgetComponent",
   fy_id = "budgetFY",
-  column_id = "____________"
+  column_id = "budget_column_id"
 )
 
 # column select UI. Update the variable name
 agencyBudgets_column_select_ui <- NULL
+
+# provide custom ui for component selection
+agencyBudgets_component_select_ui <- selectInput(
+  agencyBudgets_data_list$component_id,
+  "Component",
+  choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"), 
+  selected = "CBP"
+)
 
 # create UI. Update the variables
 ui_function(
@@ -670,7 +678,7 @@ ui_function(
   section_fy_id = agencyBudgets_data_list$fy_id,
   custom_column_select_ui = agencyBudgets_column_select_ui,
   agencies = c("DHS", "DOJ", "HHS", "DOS", "DOL"),
-  component_select_function = selectInput
+  component_select_ui = agencyBudgets_component_select_ui
 )
 ```
 
@@ -698,10 +706,11 @@ observe({
   updateSelectInput(
     session, agencyBudget_input_values$component_input_id, "Component",
     choices = component_list[[agencyBudget_input_values$agency]],
-    selected = component_list[[agencyBudget_input_values$agency]][c(1,2)]
+    selected = component_list[[agencyBudget_input_values$agency]][1]
   )
 })
 
+# update filtered data variable name
 filtered_data_budget <- reactive({
   req(agencyBudget_input_values$agency)
   load_budget_data(
@@ -721,22 +730,30 @@ filtered_input_budget <- reactive({
   return(column_to_plot)
 })
 
-budget_year <- reactive({
+agencyBudget_year <- reactive({
   paste0("20", agencyBudget_input_values$fy)
 })
 
 renderPlotly({
-  # Check the selected agency
-  plot_two_columns(
-    filtered_data_budget(),
-    filtered_input_budget(),
-    budget_year(),
-    debug = TRUE
-  )
+  # temporary solution to missing budget column name (some missing underscore)
+  if (!(filtered_input_budget() %in% colnames(filtered_data_budget()))) {
+    plot_colname <- str_replace(filtered_input_budget(), "_", ".")
+  } else {
+    plot_colname <- filtered_input_budget()
+  }
+  
+  if (plot_colname %in% colnames(filtered_data_budget())){
+    plot_two_columns(
+      filtered_data_budget(),
+      plot_colname,
+      agencyBudget_year()
+    )
+  } else {
+    warning(str_glue("Column {plot_colname} not found in dataset."))
+    return(NULL)
+  }
 })
 ```
-
-
 
 Row {data-height=200}
 -------------------------------------
@@ -753,68 +770,40 @@ Budgets vs. Backlogs
 Inputs {.sidebar}
 -------------------------------------
 
-<br>
-<br>
-<br>
-
-The dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. The sources for the department and component annual budgets data are available [here](https://www.justice.gov/oip/reports-1). The sections of the Annual Reports are accessible via the top panel. 
-
-Please select data type, component agency(s), and fiscal year(s) below.
-
-
 ```{r}
-selectInput("BudgetCompareAgency", "Agency", choices = c("DHS", "DOJ", "HHS", "DOS", "DOL"), selected = c("DHS"))
+#### NOTE FOR THIS SECTION: CRCL isn't listed in original component list for DHS
 
-conditionalPanel(
-  condition = "input.BudgetCompareAgency == 'DHS'",
-  selectInput("CompareComponentDHS", "Component", choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG"), selected = c("CBP", "PRIV", "USCIS"))
+# define variables for section
+# update the IDs, change the list variable name, 
+# then replace the variables with ctrl + f
+BB_data_list <- list(
+  agency_id = "BBAgency",
+  component_id = "BBComponent",
+  fy_id = "BBFY",
+  column_id = "BB_column_id"
 )
 
-#conditionalPanel(
-  #condition = "input.BudgetCompareAgency == 'EPA'",
-  #selectInput("CompareComponentEPA", "Component", choices = c("HQ", "Region 1", "Region 2", "Region 3", "Region 4", "Region 5", "Region 6", #"Region 7", "Region 8", "Region 9", "Region 10"), selected = c("HQ"))
-#)
+# column select UI. Update the variable name
+BB_column_select_ui <- NULL
 
-conditionalPanel(
-  condition = "input.BudgetCompareAgency == 'DOL'",
-  selectInput("CompareComponentDOL", "Component", choices = c("OSHA", "WHD", "OSEC", "OIG"), selected = c("OIG", "OSHA"))
+# provide custom ui for component selection
+BB_component_select_ui <- selectInput(
+  BB_data_list$component_id,
+  "Component",
+  choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"), 
+  selected = "CBP"
 )
 
-conditionalPanel(
-  condition = "input.BudgetCompareAgency == 'DOJ'",
-  selectInput("CompareComponentDOJ", "Component", choices = c("EOIR", "OIG"), selected = c("EOIR"))
+# create UI. Update the variables
+ui_function(
+  section_agency_id = BB_data_list$agency_id, 
+  section_component_id = BB_data_list$component_id, 
+  section_fy_id = BB_data_list$fy_id, 
+  custom_column_select_ui = BB_column_select_ui,
+  agencies = c("DHS", "DOJ", "HHS", "DOS", "DOL"),
+  component_select_ui = BB_component_select_ui
 )
-
-conditionalPanel(
-  condition = "input.BudgetCompareAgency == 'HHS'", 
-  selectInput("CompareComponentHHS", "Component", choices = c("CDC", "ACF", "OIG"), selected = c("CDC"))
-)
-
-conditionalPanel(
-  condition = "input.BudgetCompareAgency == 'DOS'", 
-  selectInput("CompareComponentDOS", "Component", choices = c("DOS-MAIN", "OIG"), selected = c("OIG"))
-)
-
-
-checkboxGroupInput("BudgetCompareYear", "Year", choices = c("2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022"), selected = c("2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022"))
-
-
-
 ```
-
-<br/>
-For more information about the FOIA, see [foia.gov](https://www.foia.gov).
-
-<br/><br/>
-Created by [Kendall McKay](https://deportation-research.buffett.northwestern.edu/people/) for the [Deportation Research Clinic](https://deportation-research.buffett.northwestern.edu).
-<br>
-<br>
-<br>
-Project support provided by [Aaron Geller](https://faculty.wcas.northwestern.edu/aaron-geller/) and [Patrick Zacher](https://www.linkedin.com/in/patrick-zacher/) of Northwestern University's [IT Research Computing and Data Services (RCDS)](https://www.it.northwestern.edu/departments/it-services-support/research/).
-<br>
-<br>
-<br>
-Funding provided by the Northwestern University [Institute for Policy Research (IPR)](https://www.ipr.northwestern.edu).
 
 Row {data-height=300}
 -------------------------------------
@@ -822,105 +811,60 @@ Row {data-height=300}
 ###
 
 ```{r}
+# Reactive values list to hold the inputs
+# Update the variable name and the variables inside observe({})
+BB_input_values <- reactiveValues()
+
+observe({
+  BB_input_values$agency <- input[[BB_data_list$agency_id]]
+  BB_input_values$component <- input[[BB_data_list$component_id]]
+  BB_input_values$fy <- input[[BB_data_list$fy_id]]
+  BB_input_values$data <- input[[BB_data_list$column_id]]
+  BB_input_values$component_input_id <- BB_data_list$component_id
+})
+
+# Update filtered data variable name
 filtered_data_budget_compare <- reactive({
-  if (input$BudgetCompareAgency == "DHS") {
-    DHS_budget_ratios <- read.csv("data/csv/Homeland_ratios.csv")
-    return(DHS_budget_ratios)
-  } else if (input$BudgetCompareAgency == "DOL") {
-    DOL_budget_ratios <- read.csv("data/csv/Labor_ratios.csv")
-    return(DOL_budget_ratios)
-  } else if (input$BudgetCompareAgency == "DOJ") {
-    DOJ_budget_ratios <- read.csv("data/csv/Justice_ratios.csv")
-    return(DOJ_budget_ratios)
-  } else if (input$BudgetCompareAgency == "HHS") {
-    HHS_budget_ratios <- read.csv("data/csv/Human_services_ratios.csv")
-    return(HHS_budget_ratios)
-  } else if (input$BudgetCompareAgency == "DOS") {
-    DOS_budget_ratios <- read.csv("data/csv/State_ratios.csv")
-    return(DOS_budget_ratios)
-  }
+  req(BB_input_values$agency)
+  load_ratios_data(
+    BB_input_values$agency,
+    data_dir = csv_dir
+  )
 })
 
-filtered_input_budget_compare_DHS <- reactive({
-  if (input$CompareComponentDHS == "USCIS") {
-    column_to_plot <- c("USCIS_ratio")
-  } else if (input$CompareComponentDHS == "CBP") {
-    column_to_plot <- c("CBP_ratio")
-  } else if (input$CompareComponentDHS == "PRIV") {
-    column_to_plot <- c("PRIV_ratio")
-  } else if (input$CompareComponentDHS == "ICE") {
-    column_to_plot <- c("ICE_ratio")
-  } else if (input$CompareComponentDHS == "OIG") {
-    column_to_plot <- c("OIG_ratio")
-  } else if (input$CompareComponentDHS == "CRCL") {
-    column_to_plot <- c("CRCL_ratio")
-  }
+# update component selection
+observe({
+  req(BB_input_values$agency)
+  updateSelectInput(
+    session, BB_input_values$component_input_id, "Component",
+    choices = component_list[[BB_input_values$agency]],
+    selected = component_list[[BB_input_values$agency]][1]
+  )
 })
 
-filtered_input_budget_compare_DOJ <- reactive({
-  if (input$CompareComponentDOJ == "EOIR") {
-    column_to_plot <- c("EOIR_ratio")
-  } else if (input$CompareComponentDOJ == "OIG") {
-    column_to_plot <- c("OIG_ratio")
+# column name
+filtered_input_budget_compare <- reactive({
+  component <- BB_input_values$component
+  
+  if (component == "DoS") {
+    component <- "DOS_main"
   }
+  
+  column_to_plot <- paste0(component, "_ratio")
+  return(column_to_plot)
 })
 
-filtered_input_budget_compare_DOL <- reactive({
-  if (input$CompareComponentDOL == "OSHA") {
-    column_to_plot <- c("OSHA_ratio")
-  } else if (input$CompareComponentDOL == "OSEC") {
-    column_to_plot <- c("OSEC_ratio")
-  } else if (input$CompareComponentDOL == "OIG") {
-    column_to_plot <- c("OIG_ratio")
-  } else if (input$CompareComponentDOL == "WHD") {
-    column_to_plot <- c("WHD_ratio")
-  }
+BB_year <- reactive({
+  paste0("20", BB_input_values$fy)
 })
-
-filtered_input_budget_compare_HHS <- reactive({
-  if (input$CompareComponentHHS == "CDC") {
-    column_to_plot <- c("CDC_ratio")
-  } else if (input$CompareComponentHHS == "ACF") {
-    column_to_plot <- c("ACF_ratio")
-  } else if (input$CompareComponentHHS == "OIG") {
-    column_to_plot <- c("OIG_ratio")
-  }
-})
-
-filtered_input_budget_compare_DOS <- reactive({
-  if (input$CompareComponentDOS == "DOS-MAIN") {
-    column_to_plot <- c("DOS_main_ratio")
-  } else if (input$CompareComponentDOS == "OIG") {
-    column_to_plot <- c("OIG_ratio")
-  }
-})
-
 
 renderPlotly({
-  # Check the selected agency
-  selected_agency <- input$BudgetCompareAgency
-  
-  if (selected_agency == "DHS") {
-    plot_single_column_budget(filtered_data_budget_compare(), filtered_input_budget_compare_DHS(), input$BudgetCompareYear)
-  } else if (selected_agency == "DOJ") {
-    plot_single_column_budget(filtered_data_budget_compare(), filtered_input_budget_compare_DOJ(), input$BudgetCompareYear)
-  } else if (selected_agency == "DOL") {
-    plot_single_column_budget(filtered_data_budget_compare(), filtered_input_budget_compare_DOL(), input$BudgetCompareYear)
-  } else if (selected_agency == "HHS") {
-    plot_single_column_budget(filtered_data_budget_compare(), filtered_input_budget_compare_HHS(), input$BudgetCompareYear)
-  } else if (selected_agency == "DOS") {
-    plot_single_column_budget(filtered_data_budget_compare(), filtered_input_budget_compare_DOS(), input$BudgetCompareYear)
-  }
+  plot_single_column_budget(
+    filtered_data_budget_compare(),
+    filtered_input_budget_compare(),
+    BB_year()
+  )
 })
-
-
-#renderPlotly({
-#  plot_single_column_budget(filtered_data_budget_compare(), filtered_input_budget_compare(), input$BudgetCompareYear)
-#})
-
-#renderPlotly({
- # plot_single_column(filtered_data_budget_compare(), input$CompareComponentDHS, filtered_data_budget_compare_components(), input$BudgetCompareYear)
-#})
 ```
 
 
@@ -929,104 +873,25 @@ Row {data-height=300}
 ###
 
 ```{r}
-filtered_data_budget_compare_backlog <- reactive({
-  if (input$BudgetCompareAgency == "DHS") {
-    DHS_budget_ratios <- read.csv("data/csv/Homeland_ratios.csv")
-    return(DHS_budget_ratios)
-  } else if (input$BudgetCompareAgency == "DOL") {
-    DOL_budget_ratios <- read.csv("data/csv/Labor_ratios.csv")
-    return(DOL_budget_ratios)
-  } else if (input$BudgetCompareAgency == "DOJ") {
-    DOJ_budget_ratios <- read.csv("data/csv/Justice_ratios.csv")
-    return(DOJ_budget_ratios)
-  } else if (input$BudgetCompareAgency == "DOS") {
-    DOS_budget_ratios <- read.csv("data/csv/State_ratios.csv")
-    return(DOS_budget_ratios)
-  } else if (input$BudgetCompareAgency == "HHS") {
-    HHS_budget_ratios <- read.csv("data/csv/Human_services_ratios.csv")
-    return(HHS_budget_ratios)
+# column name
+filtered_input_budget_compare_backlog <- reactive({
+  component <- BB_input_values$component
+  
+  if (component == "DoS") {
+    component <- "DOS_main"
   }
+  
+  column_to_plot <- paste0(component, "_backlog")
+  return(column_to_plot)
 })
-
-
-filtered_input_budget_compare_backlog_DHS <- reactive({
-  if (input$CompareComponentDHS == "USCIS") {
-    column_to_plot_backlog <- c("USCIS_backlog")
-  } else if (input$CompareComponentDHS == "CBP") {
-    column_to_plot_backlog <- c("CBP_backlog")
-  } else if (input$CompareComponentDHS == "PRIV") {
-    column_to_plot_backlog <- c("PRIV_backlog")
-  } else if (input$CompareComponentDHS == "ICE") {
-    column_to_plot_backlog <- c("ICE_backlog")
-  } else if (input$CompareComponentDHS == "OIG") {
-    column_to_plot_backlog <- c("OIG_backlog")
-  } else if (input$CompareComponentDHS == "CRCL") {
-    column_to_plot_backlog <- c("CRCL_backlog")
-  } 
-})
-
-filtered_input_budget_compare_backlog_DOJ <- reactive({
-  if (input$CompareComponentDOJ == "EOIR") {
-    column_to_plot_backlog <- c("EOIR_backlog")
-  } else if (input$CompareComponentDOJ == "OIG") {
-    column_to_plot_backlog <- c("OIG_backlog")
-  }
-})
-
-filtered_input_budget_compare_backlog_DOL <- reactive({
-  if (input$CompareComponentDOL == "OSHA") {
-    column_to_plot_backlog <- c("OSHA_backlog")
-  } else if (input$CompareComponentDOL == "OSEC") {
-    column_to_plot_backlog <- c("OSEC_backlog")
-  } else if (input$CompareComponentDOL == "OIG") {
-    column_to_plot_backlog <- c("OIG_backlog")
-  } else if (input$CompareComponentDOL == "WHD") {
-    column_to_plot_backlog <- c("WHD_backlog")
-  }
-})
-
-filtered_input_budget_compare_backlog_HHS <- reactive({
-  if (input$CompareComponentHHS == "CDC") {
-    column_to_plot_backlog <- c("CDC_backlog")
-  } else if (input$CompareComponentHHS == "ACF") {
-    column_to_plot_backlog <- c("ACF_backlog")
-  } else if (input$CompareComponentHHS == "OIG") {
-    column_to_plot_backlog <- c("OIG_backlog")
-  }
-})
-
-filtered_input_budget_compare_backlog_DOS <- reactive({
-  if (input$CompareComponentDOS == "DOS-MAIN") {
-    column_to_plot_backlog <- c("DOS_main_backlog")
-  } else if (input$CompareComponentDOS == "OIG") {
-    column_to_plot_backlog <- c("OIG_backlog")
-  }
-})
-
-#DOJ_budget_ratios <- read.csv("Justice_ratios.csv")
 
 renderPlotly({
-  # Check the selected agency
-  selected_agency <- input$BudgetCompareAgency
-  
-  if (selected_agency == "DHS") {
-    plot_single_column_backlog(filtered_data_budget_compare_backlog(), filtered_input_budget_compare_backlog_DHS(), input$BudgetCompareYear)
-  } else if (selected_agency == "DOJ") {
-    plot_single_column_backlog(filtered_data_budget_compare_backlog(), filtered_input_budget_compare_backlog_DOJ(), input$BudgetCompareYear)
-  } else if (selected_agency == "DOL") {
-    plot_single_column_backlog(filtered_data_budget_compare_backlog(), filtered_input_budget_compare_backlog_DOL(), input$BudgetCompareYear)
-  } else if (selected_agency == "HHS") {
-    plot_single_column_backlog(filtered_data_budget_compare_backlog(), filtered_input_budget_compare_backlog_HHS(), input$BudgetCompareYear)
-  } else if (selected_agency == "DOS") {
-    plot_single_column_backlog(filtered_data_budget_compare_backlog(), filtered_input_budget_compare_backlog_DOS(), input$BudgetCompareYear)
-  }
+  plot_single_column_backlog(
+    filtered_data_budget_compare(), 
+    filtered_input_budget_compare_backlog(),
+    BB_year()
+  )
 })
-
-
-
-#renderPlotly({
- # plot_single_column_backlog(filtered_data_budget_compare_backlog(), filtered_input_budget_compare_backlog(), input$BudgetCompareYear)
-#})
 ```
 
 ABOUT
