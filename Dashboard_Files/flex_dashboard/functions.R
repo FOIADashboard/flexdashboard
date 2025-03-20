@@ -1,19 +1,45 @@
-load_foia <- function(input_data, possible_agencies, section_name) {
+load_foia <- function(input_data, possible_agencies, section_name, data_dir = ".", ppr=FALSE) {
   if (!(input_data %in% possible_agencies)) {
     stop("Invalid agency selected")
   }
   
-  load(str_glue("{input_data}_data.Rda", envir = .GlobalEnv))
+  if (!ppr) {
+    load(file.path(data_dir, str_glue("{input_data}_data.Rda")), envir = .GlobalEnv)
+  } else if (ppr) {
+    load(file.path(data_dir, str_glue("{input_data}_PPR_data.Rda")), envir = .GlobalEnv)
+  }
   return(foia_data[[section_name]])
 }
 
-plot_single_column <- function(data, column_name, selected_components, selected_years, manual_titles = NULL) {
+load_budget_data <- function(input_data, data_dir = ".") {
+  filenames <- c(
+    "DHS" = "Homeland_budgets.csv",
+    "DOL" = "Labor_budgets.csv",
+    "DOJ" = "Justice_budgets.csv",
+    "DOS" = "State_budgets.csv",
+    "HHS" = "Human_services_budgets.csv",
+    "HUD" = "Urban_budgets.csv",
+    "DOD" = "Defense_budgets.csv",
+    "VA" = "Veterans_budgets.csv",
+    "Treasury" = "Treasury_budgets.csv",
+    "Education" = "Education_budgets.csv",
+    "Energy" = "Energy_budgets.csv",
+    "Commerce" = "Commerce_budgets.csv",
+    "Agriculture" = "Agriculture_budgets.csv",
+    "Interior" = "Interior_budgets.csv"
+  )
+  return(read.csv(file.path(data_dir, filenames[input_data])))
+}
+
+plot_single_column <- function(data, column_name, selected_components, selected_years, manual_titles = NULL, debug = FALSE) {
   
-    # print(head(data))
-    # print(column_name)
-    # print(selected_components)
-    # print(selected_years)
-    # print(manual_titles)
+  if (debug) {
+    print(head(data))
+    print(column_name)
+    print(selected_components)
+    print(selected_years)
+    print(manual_titles)
+  }
   
   if (is.null(manual_titles)) {
     # Use automated titles
@@ -51,7 +77,13 @@ plot_single_column <- function(data, column_name, selected_components, selected_
 
 
 
-plot_two_columns <- function(data, selected_columns, selected_years) {
+plot_two_columns <- function(data, selected_columns, selected_years, debug = FALSE) {
+  if (debug) {
+    print(head(data))
+    print(selected_columns)
+    print(selected_years)
+  }
+  
   selected_columns_expr <- rlang::syms(selected_columns)
   
   plot_data <- data %>%

@@ -25,6 +25,7 @@ library(stringr)
 
 # global variables
 rda_dir <- "data/rda"
+csv_dir <- "data/csv"
 agencies <- c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS")
 component_list <- list(
   "DHS" = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"),
@@ -106,7 +107,8 @@ personnel_filtered_data <- reactive({
   load_foia(
     input_data = personnel_input_values$agency,
     possible_agencies = agencies,
-    section_name = "PersonnelAndCostSection"
+    section_name = "PersonnelAndCostSection",
+    data_dir = rda_dir
   )
 })
 
@@ -203,7 +205,8 @@ backlog_filtered_data <- reactive({
   load_foia(
     input_data = backlog_input_values$agency,
     possible_agencies = agencies,
-    section_name = "BacklogSection"
+    section_name = "BacklogSection",
+    data_dir = rda_dir
   )
 })
 
@@ -286,7 +289,8 @@ expedited_filtered_data <- reactive({
   load_foia(
     input_data = expedited_input_values$agency,
     possible_agencies = agencies,
-    section_name = "ExpeditedProcessingSection"
+    section_name = "ExpeditedProcessingSection",
+    data_dir = rda_dir
   )
 })
 
@@ -384,7 +388,8 @@ PR_filtered_data <- reactive({
   load_foia(
     input_data = pr_input_values$agency,
     possible_agencies = agencies,
-    section_name = "ProcessedRequestSection"
+    section_name = "ProcessedRequestSection",
+    data_dir = rda_dir
   )
 })
 
@@ -399,13 +404,13 @@ observe({
 
 # Maps the column name to the plot title
 filtered_input_manual_title_PR <- reactive({
-  if (input$PRData == "ProcessingStatisticsPendingAtStartQuantity") {
+  if (pr_input_values$data == "ProcessingStatisticsPendingAtStartQuantity") {
     return("Requests Pending at FY Start")
-  } else if (input$PRData == "ProcessingStatisticsPendingAtEndQuantity") {
+  } else if (pr_input_values$data == "ProcessingStatisticsPendingAtEndQuantity") {
     return("Requests Pending at FY End")
-  } else if (input$PRData == "ProcessingStatisticsReceivedQuantity") {
+  } else if (pr_input_values$data == "ProcessingStatisticsReceivedQuantity") {
     return("Requests Received")
-  } else if (input$PRData == "ProcessingStatisticsProcessedQuantity") {
+  } else if (pr_input_values$data == "ProcessingStatisticsProcessedQuantity") {
     return("Requests Processed")
   } else {
     return(NULL)  # Return NULL if no match is found
@@ -430,76 +435,38 @@ Pending Requests
 Inputs {.sidebar}
 -------------------------------------
 
-<br>
-<br>
-<br>
-
-The dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. The sources for the department and component annual budgets data are available [here](https://www.justice.gov/oip/reports-1). The sections of the Annual Reports are accessible via the top panel. 
-
-Please select data type, component agency(s), and fiscal year(s) below. 
-
 ```{r}
-selectInput("PendingRAgency", "Agency", choices = c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS"), selected = c("DHS"))
-
-pending_choices <- c("Simple Pending Requests" = "SimplePendingRequestStatisticsPendingRequestQuantity",
-                            "Simple Median Days" = "SimplePendingRequestStatisticsPendingRequestMedianDaysValue",
-                            "Simple Average Days" ="SimplePendingRequestStatisticsPendingRequestAverageDaysValue",
-                            "Complex Pending Requests" = "ComplexPendingRequestStatisticsPendingRequestQuantity",
-                            "Complex Median Days" = "ComplexPendingRequestStatisticsPendingRequestMedianDaysValue",
-                     "Complex Average Days" = "ComplexPendingRequestStatisticsPendingRequestAverageDaysValue",
-                     "Expedited Pending Requests" = "ExpeditedPendingRequestStatisticsPendingRequestQuantity",
-                     "Expedited Median Days" = "ExpeditedPendingRequestStatisticsPendingRequestMedianDaysValue",
-                     "Expedited Average Days" = "ExpeditedPendingRequestStatisticsPendingRequestAverageDaysValue")
-
-selectInput("PendingRData", "Statistic", choices = pending_choices, selected = c("Simple Pending Requests"))
-
-conditionalPanel(
-  condition = "input.PendingRAgency == 'DHS'",
-  checkboxGroupInput("PendingRComponentDHS", "Component", choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"), selected = c("CBP", "PRIV", "USCIS"))
+# define variables for section
+# update the IDs, change the list variable name, 
+# then replace the variables with ctrl + f
+pendingR_data_list <- list(
+  agency_id = "PendingRAgency",
+  component_id = "PendingRComponent",
+  fy_id = "PendingRFY",
+  column_id = "PendingRData"
 )
 
-conditionalPanel(
-  condition = "input.PendingRAgency == 'EPA'",
-  checkboxGroupInput("PendingRComponentEPA", "Component", choices = c("HQ", "Region 1", "Region 2", "Region 3", "Region 4", "Region 5", "Region 6", "Region 7", "Region 8", "Region 9", "Region 10"), selected = c("HQ"))
-)
+# column select UI. Update the variable name
+pendingR_column_select_ui <- selectInput(
+  pendingR_data_list$column_id, "Statistic", 
+  choices = c("Simple Pending Requests" = "SimplePendingRequestStatisticsPendingRequestQuantity",
+              "Simple Median Days" = "SimplePendingRequestStatisticsPendingRequestMedianDaysValue",
+              "Simple Average Days" ="SimplePendingRequestStatisticsPendingRequestAverageDaysValue",
+              "Complex Pending Requests" = "ComplexPendingRequestStatisticsPendingRequestQuantity",
+              "Complex Median Days" = "ComplexPendingRequestStatisticsPendingRequestMedianDaysValue",
+              "Complex Average Days" = "ComplexPendingRequestStatisticsPendingRequestAverageDaysValue",
+              "Expedited Pending Requests" = "ExpeditedPendingRequestStatisticsPendingRequestQuantity",
+              "Expedited Median Days" = "ExpeditedPendingRequestStatisticsPendingRequestMedianDaysValue",
+              "Expedited Average Days" = "ExpeditedPendingRequestStatisticsPendingRequestAverageDaysValue"), 
+  selected = "Simple Pending Requests")
 
-conditionalPanel(
-  condition = "input.PendingRAgency == 'DOL'",
-  checkboxGroupInput("PendingRComponentDOL", "Component", choices = c("OSHA", "WHD", "OSEC", "OIG"), selected = c("OIG", "OSHA"))
-)
-
-conditionalPanel(
-  condition = "input.PendingRAgency == 'DOJ'",
-  checkboxGroupInput("PendingRComponentDOJ", "Component", choices = c("EOIR", "OIG"), selected = c("EOIR"))
-)
-
-conditionalPanel(
-  condition = "input.PendingRAgency == 'HHS'", 
-  checkboxGroupInput("PendingRComponentHHS", "Component", choices = c("CDC", "ACF", "OIG"), selected = c("CDC"))
-)
-
-conditionalPanel(
-  condition = "input.PendingRAgency == 'DOS'", 
-  checkboxGroupInput("PendingRComponentDOS", "Component", choices = c("OIG", "DoS"), selected = c("OIG"))
-)
-
-checkboxGroupInput("PendingRFY", "FY", choices = c("10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"), selected = c("10", "11", "12", "13", "14", "15", "16", "17", "18"))
-
+# create UI. Update the variables
+ui_function(
+  section_agency_id = pendingR_data_list$agency_id, 
+  section_component_id = pendingR_data_list$component_id, 
+  section_fy_id = pendingR_data_list$fy_id, 
+  custom_column_select_ui = pendingR_column_select_ui)
 ```
-
-<br/>
-For more information about the FOIA, see [foia.gov](https://www.foia.gov).
-
-<br/><br/>
-Created by [Kendall McKay](https://deportation-research.buffett.northwestern.edu/people/) for the [Deportation Research Clinic](https://deportation-research.buffett.northwestern.edu).
-<br>
-<br>
-<br>
-Project support provided by [Aaron Geller](https://faculty.wcas.northwestern.edu/aaron-geller/) and [Patrick Zacher](https://www.linkedin.com/in/patrick-zacher/) of Northwestern University's [IT Research Computing and Data Services (RCDS)](https://www.it.northwestern.edu/departments/it-services-support/research/).
-<br>
-<br>
-<br>
-Funding provided by the Northwestern University [Institute for Policy Research (IPR)](https://www.ipr.northwestern.edu).
 
 Row {data-height=300}
 -------------------------------------
@@ -507,87 +474,71 @@ Row {data-height=300}
 ###
 
 ```{r}
-filtered_data_pendingR <- reactive({
-  if (input$PendingRAgency == "DHS") {
-    load("DHS_PPR_data.Rda")
-    return(foia_data$PendingPerfectedRequestsSection)
-  } else if (input$PendingRAgency == "EPA") {
-    load("EPA_PPR_data.Rda")
-    return(foia_data$PendingPerfectedRequestsSection)
-  } else if (input$PendingRAgency == "DOL") {
-    load("DOL_PPR_data.Rda")
-    return(foia_data$PendingPerfectedRequestsSection)
-  } else if (input$PendingRAgency == "DOJ") {
-    load("DOJ_PPR_data.Rda")
-    return(foia_data$PendingPerfectedRequestsSection)
-  } else if (input$PendingRAgency == "HHS") {
-    load("HHS_PPR_data.Rda")
-    return(foia_data$PendingPerfectedRequestsSection)
-  } else if (input$PendingRAgency == "DOS") {
-    load("DOS_PPR_data.Rda")
-    return(foia_data$PendingPerfectedRequestsSection)
-  }
+# Reactive values list to hold the inputs
+# Update the variable name and the variables inside observe({})
+pendingR_input_values <- reactiveValues()
+observe({
+  pendingR_input_values$agency <- input[[pendingR_data_list$agency_id]]
+  pendingR_input_values$component <- input[[pendingR_data_list$component_id]]
+  pendingR_input_values$fy <- input[[pendingR_data_list$fy_id]]
+  pendingR_input_values$data <- input[[pendingR_data_list$column_id]]
+  pendingR_input_values$component_input_id <- pendingR_data_list$component_id
 })
 
-filtered_input_pendingR_component <- reactive({
-  if (input$PendingRAgency == "DHS") {
-    return(input$PendingRComponentDHS)
-  } else if (input$PendingRAgency == "EPA") {
-    return(input$PendingRComponentEPA)
-  } else if (input$PendingRAgency == "DOL") {
-    return(input$PendingRComponentDOL)
-  } else if (input$PendingRAgency == "DOJ") {
-    return(input$PendingRComponentDOJ)
-  } else if (input$PendingRAgency == "HHS") {
-    return(input$PendingRComponentHHS)
-  } else if (input$PendingRAgency == "DOS") {
-    return(input$PendingRComponentDOS)}
+# Update filtered data variable name
+pendingR_filtered_data <- reactive({
+  req(pendingR_input_values$agency)
+  load_foia(
+    input_data = pendingR_input_values$agency,
+    possible_agencies = agencies,
+    section_name = "PendingPerfectedRequestsSection",
+    data_dir = rda_dir,
+    ppr = TRUE
+  )
 })
 
-## not sure how to get the median, average, and 
-
-filtered_input_pendingR_statistics <- reactive({
-  if (input$PendingRData == "SimplePendingRequestStatistics") {
-    return(foia_data$PendingPerfectedRequestsSection$SimplePendingRequestStatistics)
-  } else if (input$PendingRData == "ComplexPendingRequestStatistics") {
-    return(foia_data$PendingPerfectedRequestsSection$ComplexPendingRequestStatistics)
-  } else if (input$PendingRData == "ExpeditedPendingRequestStatistics") {
-    return(foia_data$PendingPerfectedRequestsSection$ExpeditedPendingRequestStatistics)
-  }
+observe({
+  req(pendingR_input_values$agency)
+  updateCheckboxGroupInput(
+    session, pendingR_input_values$component_input_id, "Component",
+    choices = component_list[[pendingR_input_values$agency]],
+    selected = component_list[[pendingR_input_values$agency]][c(1,2)]
+  )
 })
 
+# Maps the column name to the plot title
 filtered_input_manual_title_pendingR <- reactive({
-  if (input$PendingRData == "SimplePendingRequestStatisticsPendingRequestQuantity") {
+  if (pendingR_input_values$data == "SimplePendingRequestStatisticsPendingRequestQuantity") {
     return("Simple Pending Request Quantity")
-  } else if (input$PendingRData == "SimplePendingRequestStatisticsPendingRequestMedianDaysValue") {
+  } else if (pendingR_input_values$data == "SimplePendingRequestStatisticsPendingRequestMedianDaysValue") {
     return("Simple Pending Request Median Days")
-  } else if (input$PendingRData == "SimplePendingRequestStatisticsPendingRequestAverageDaysValue") {
+  } else if (pendingR_input_values$data == "SimplePendingRequestStatisticsPendingRequestAverageDaysValue") {
     return("Simple Pending Request Average Days")
-  } else if (input$PendingRData == "ComplexPendingRequestStatisticsPendingRequestQuantity") {
+  } else if (pendingR_input_values$data == "ComplexPendingRequestStatisticsPendingRequestQuantity") {
     return("Complex Pending Request Quantity")
-  } else if (input$PendingRData == "ComplexPendingRequestStatisticsPendingRequestMedianDaysValue") {
+  } else if (pendingR_input_values$data == "ComplexPendingRequestStatisticsPendingRequestMedianDaysValue") {
     return("Complex Pending Request Median Days")
-  } else if (input$PendingRData == "ComplexPendingRequestStatisticsPendingRequestAverageDaysValue") {
+  } else if (pendingR_input_values$data == "ComplexPendingRequestStatisticsPendingRequestAverageDaysValue") {
     return("Complex Pending Request Average Days")
-  } else if (input$PendingRData == "ExpeditedPendingRequestStatisticsPendingRequestQuantity") {
+  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatisticsPendingRequestQuantity") {
     return("Expedited Pending Request Quantity")
-  } else if (input$PendingRData == "ExpeditedPendingRequestStatisticsPendingRequestMedianDaysValue") {
+  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatisticsPendingRequestMedianDaysValue") {
     return("Expedited Pending Request Median Days")
-  } else if (input$PendingRData == "ExpeditedPendingRequestStatisticsPendingRequestAverageDaysValue") {
+  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatisticsPendingRequestAverageDaysValue") {
     return("Expedited Pending Request Average Days")
   } else {
     return(NULL)  # Return NULL if no match is found
   }
 })
 
-#observeEvent(input$BacklogData, {print(input$BacklogData)})
-
-#observeEvent(input$BacklogComponent, {print(input$BacklogComponent)})
-
-#renderTable(filtered_data_backlog())
-
 renderPlotly({
-  plot_single_column(filtered_data_pendingR(), input$PendingRData, filtered_input_pendingR_component(),  input$PendingRFY, manual_titles = filtered_input_manual_title_pendingR())
+  plot_single_column(
+    isolate(pendingR_filtered_data()),
+    pendingR_input_values$data,
+    pendingR_input_values$component,
+    pendingR_input_values$fy,
+    manual_title = filtered_input_manual_title_pendingR()
+  )
 })
 ```
 
@@ -597,72 +548,36 @@ Appeal Disposition
 Inputs {.sidebar}
 -------------------------------------
 
-<br>
-<br>
-<br>
-
-The dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. The sources for the department and component annual budgets data are available [here](https://www.justice.gov/oip/reports-1). The sections of the Annual Reports are accessible via the top panel. 
-
-Please select data type, component agency(s), and fiscal year(s) below. 
-
-
 ```{r}
-selectInput("AppealDisAgency", "Agency", choices = c("DHS", "EPA", "DOL", "DOS"), selected = c("DHS"))
-
-data_choices_appealdisposition <- c("Affirmed On Appeal" = "AppealDispositionAffirmedQuantity",
-                                    "Partially Affirmed On Appeal" = "AppealDispositionPartialQuantity",
-                                    "Reversed On Appeal" = "AppealDispositionReversedQuantity",
-                                    "Appeal Closed - Other" = "AppealDispositionOtherQuantity",
-                                    "Number of Appeals" = "AppealDispositionTotalQuantity")
-
-selectInput("AppealDisData", "Data", choices = data_choices_appealdisposition, selected = c("AppealDispositionTotalQuantity"))
-
-conditionalPanel(
-  condition = "input.AppealDisAgency == 'DHS'",
-  checkboxGroupInput("AppealDisComponentDHS", "Component", choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"), selected = c("CBP", "PRIV", "USCIS"))
+# define variables for section
+# update the IDs, change the list variable name, 
+# then replace the variables with ctrl + f
+appealDisp_data_list <- list(
+  agency_id = "appealDispAgency",
+  component_id = "appealDispComponent",
+  fy_id = "appealDispFY",
+  column_id = "appealDispData"
 )
 
-conditionalPanel(
-  condition = "input.AppealDisAgency == 'EPA'",
-  checkboxGroupInput("AppealDisComponentEPA", "Component", choices = c("HQ", "Region 1", "Region 2", "Region 3", "Region 4", "Region 5", "Region 6", "Region 7", "Region 8", "Region 9", "Region 10"), selected = c("HQ"))
-)
+# column select UI. Update the variable name
+appealDisp_column_select_ui <- selectInput(
+  appealDisp_data_list$column_id, "Statistic", 
+  choices = c("Affirmed On Appeal" = "AppealDispositionAffirmedQuantity",
+              "Partially Affirmed On Appeal" = "AppealDispositionPartialQuantity",
+              "Reversed On Appeal" = "AppealDispositionReversedQuantity",
+              "Appeal Closed - Other" = "AppealDispositionOtherQuantity",
+              "Number of Appeals" = "AppealDispositionTotalQuantity"), 
+  selected = "AppealDispositionTotalQuantity")
 
-conditionalPanel(
-  condition = "input.AppealDisAgency == 'DOL'",
-  checkboxGroupInput("AppealDisComponentDOL", "Component", choices = c("OSHA", "WHD", "OSEC", "OIG"), selected = c("OIG", "OSHA"))
+# create UI. Update the variables
+ui_function(
+  section_agency_id = appealDisp_data_list$agency_id, 
+  section_component_id = appealDisp_data_list$component_id, 
+  section_fy_id = appealDisp_data_list$fy_id, 
+  custom_column_select_ui = appealDisp_column_select_ui,
+  agencies = c("DHS", "EPA", "DOL", "DOS")
 )
-
-conditionalPanel(
-  condition = "input.AppealDisAgency == 'DOJ'",
-  checkboxGroupInput("AppealDisComponentDOJ", "Component", choices = c("EOIR", "OIG"), selected = c("EOIR"))
-)
-
-conditionalPanel(
-  condition = "input.AppealDisAgency == 'HHS'", 
-  checkboxGroupInput("AppealDisComponentHHS", "Component", choices = c("CDC", "ACF", "OIG"), selected = c("CDC"))
-)
-
-conditionalPanel(
-  condition = "input.AppealDisAgency == 'DOS'", 
-  checkboxGroupInput("AppealDisComponentDOS", "Component", choices = c("OIG", "DoS"), selected = c("OIG"))
-)
-
-checkboxGroupInput("AppealDisFY", "FY", choices = c("10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"), selected = c("10", "11", "12", "13", "14", "15", "16", "17", "18"))
 ```
-
-<br/>
-For more information about the FOIA, see [foia.gov](https://www.foia.gov).
-
-<br/><br/>
-Created by [Kendall McKay](https://deportation-research.buffett.northwestern.edu/people/) for the [Deportation Research Clinic](https://deportation-research.buffett.northwestern.edu).
-<br>
-<br>
-<br>
-Project support provided by [Aaron Geller](https://faculty.wcas.northwestern.edu/aaron-geller/) and [Patrick Zacher](https://www.linkedin.com/in/patrick-zacher/) of Northwestern University's [IT Research Computing and Data Services (RCDS)](https://www.it.northwestern.edu/departments/it-services-support/research/).
-<br>
-<br>
-<br>
-Funding provided by the Northwestern University [Institute for Policy Research (IPR)](https://www.ipr.northwestern.edu).
 
 Row {data-height=300}
 -------------------------------------
@@ -670,53 +585,47 @@ Row {data-height=300}
 ###
 
 ```{r}
-filtered_data_appeal_dis <- reactive({
-  if (input$AppealDisAgency == "DHS") {
-    load("DHS_data.Rda")
-    return(foia_data$AppealDispositionSection)
-  } else if (input$AppealDisAgency == "EPA") {
-    load("EPA_data.Rda")
-    return(foia_data$AppealDispositionSection)
-  } else if (input$AppealDisAgency == "DOL") {
-    load("DOL_data.Rda")
-    return(foia_data$AppealDispositionSection)
-  } else if (input$AppealDisAgency == "DOJ") {
-    load("DOJ_data.Rda")
-    return(foia_data$AppealDispositionSection)
-  } else if (input$AppealDisAgency == "HHS") {
-    load("HHS_data.Rda")
-    return(foia_data$AppealDispositionSection)
-  } else if (input$AppealDisAgency == "DOS") {
-    load("DOS_data.Rda")
-    return(foia_data$AppealDispositionSection)
-  }
+# Reactive values list to hold the inputs
+# Update the variable name and the variables inside observe({})
+appealDisp_input_values <- reactiveValues()
+observe({
+  appealDisp_input_values$agency <- input[[appealDisp_data_list$agency_id]]
+  appealDisp_input_values$component <- input[[appealDisp_data_list$component_id]]
+  appealDisp_input_values$fy <- input[[appealDisp_data_list$fy_id]]
+  appealDisp_input_values$data <- input[[appealDisp_data_list$column_id]]
+  appealDisp_input_values$component_input_id <- appealDisp_data_list$component_id
 })
 
-filtered_input_appeal_dis_component <- reactive({
-  if (input$AppealDisAgency == "DHS") {
-    return(input$AppealDisComponentDHS)
-  } else if (input$AppealDisAgency == "EPA") {
-    return(input$AppealDisComponentEPA)
-  } else if (input$AppealDisAgency == "DOL") {
-    return(input$AppealDisComponentDOL)
-  } else if (input$AppealDisAgency == "DOJ") {
-    return(input$AppealDisComponentDOJ)
-  } else if (input$AppealDisAgency == "HHS") {
-    return(input$AppealDisComponentHHS)
-  } else if (input$AppealDisAgency == "DOS") {
-    return(input$AppealDisComponentDOS)}
+# Update filtered data variable name
+appealDisp_filtered_data <- reactive({
+  req(appealDisp_input_values$agency)
+  load_foia(
+    input_data = appealDisp_input_values$agency,
+    possible_agencies = agencies,
+    section_name = "AppealDispositionSection",
+    data_dir = rda_dir
+  )
+})
+
+observe({
+  req(appealDisp_input_values$agency)
+  updateCheckboxGroupInput(
+    session, appealDisp_input_values$component_input_id, "Component",
+    choices = component_list[[appealDisp_input_values$agency]],
+    selected = component_list[[appealDisp_input_values$agency]][c(1,2)]
+  )
 })
 
 filtered_input_manual_title_appeal_dis <- reactive({
-  if (input$AppealDisData == "AppealDispositionAffirmedQuantity") {
+  if (appealDisp_input_values$data == "AppealDispositionAffirmedQuantity") {
     return("Affirmed on Appeal")
-  } else if (input$AppealDisData == "AppealDispositionPartialQuantity") {
+  } else if (appealDisp_input_values$data == "AppealDispositionPartialQuantity") {
     return("Partially Affirmed on Appeal")
-  } else if (input$AppealDisData == "AppealDispositionReversedQuantity") {
+  } else if (appealDisp_input_values$data == "AppealDispositionReversedQuantity") {
     return("Reversed on Appeal")
-  } else if (input$AppealDisData == "AppealDispositionOtherQuantity") {
+  } else if (appealDisp_input_values$data == "AppealDispositionOtherQuantity") {
     return("Appeals Closed for Other Reasons")
-  } else if (input$AppealDisData == "AppealDispositionTotalQuantity") {
+  } else if (appealDisp_input_values$data == "AppealDispositionTotalQuantity") {
     return("Number of Appeals")
   } else {
     return(NULL)  # Return NULL if no match is found
@@ -724,7 +633,13 @@ filtered_input_manual_title_appeal_dis <- reactive({
 })
 
 renderPlotly({
-  plot_single_column(filtered_data_appeal_dis(), input$AppealDisData, filtered_input_appeal_dis_component(), input$AppealDisFY, manual_titles = filtered_input_manual_title_appeal_dis())
+  plot_single_column(
+    isolate(appealDisp_filtered_data()),
+    appealDisp_input_values$data,
+    appealDisp_input_values$component,
+    appealDisp_input_values$fy,
+    manual_title = filtered_input_manual_title_appeal_dis()
+  )
 })
 ```
 
@@ -734,62 +649,30 @@ Agency Budgets
 Inputs {.sidebar}
 -------------------------------------
 
-<br>
-<br>
-<br>
-
-The [Deportation Research Clinic's](https://deportation-research.buffett.northwestern.edu/) dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. Access the Annual Reports [here](https://www.justice.gov/oip/reports-1). The dashboard's tabs reflect several of the categories of the Annual Reports. 
-
-<br>
-The sources for the budget data are accessible [here.](https://docs.google.com/spreadsheets/d/1CV6Z_gTZ0KVZ84ChH9lS88vAB-SyuqvRFO_Mavl7NDw/edit?usp=sharing)  
-
-<br>
-Please select data type, component agency(s), and fiscal year(s) below. 
-
 ```{r}
-selectInput("BudgetAgency", "Agency", choices = c("DHS", "DOJ", "HHS", "DOS", "DOL"), selected = c("DHS")) # TOOK OUT(for now): "DOL", "HUD", "DOD", "VA", "Treasury", "Education", "Energy", "Commerce", "Agriculture"
-#___
-
-conditionalPanel(
-  condition = "input.BudgetAgency == 'DHS'",
-  selectInput("BudgetComponentDHS", "Component", choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG"), selected = c("CBP", "PRIV", "USCIS"))
+# define variables for section
+# update the IDs, change the list variable name,
+# then replace the variables with ctrl + f
+agencyBudgets_data_list <- list(
+  agency_id = "budgetAgency",
+  component_id = "budgetComponent",
+  fy_id = "budgetFY",
+  column_id = "____________"
 )
 
-#conditionalPanel(
-  #condition = "input.BudgetCompareAgency == 'EPA'",
-  #selectInput("CompareComponentEPA", "Component", choices = c("HQ", "Region 1", "Region 2", "Region 3", "Region 4", "Region 5", "Region 6", #"Region 7", "Region 8", "Region 9", "Region 10"), selected = c("HQ"))
-#)
+# column select UI. Update the variable name
+agencyBudgets_column_select_ui <- NULL
 
-conditionalPanel(
-  condition = "input.BudgetAgency == 'DOL'",
-  selectInput("BudgetComponentDOL", "Component", choices = c("OSHA", "WHD", "OSEC", "OIG"), selected = c("OIG", "OSHA"))
+# create UI. Update the variables
+ui_function(
+  section_agency_id = agencyBudgets_data_list$agency_id,
+  section_component_id = agencyBudgets_data_list$component_id,
+  section_fy_id = agencyBudgets_data_list$fy_id,
+  custom_column_select_ui = agencyBudgets_column_select_ui,
+  agencies = c("DHS", "DOJ", "HHS", "DOS", "DOL"),
+  component_select_function = selectInput
 )
-
-conditionalPanel(
-  condition = "input.BudgetAgency == 'DOJ'",
-  selectInput("BudgetComponentDOJ", "Component", choices = c("EOIR", "OIG"), selected = c("EOIR"))
-)
-
-conditionalPanel(
-  condition = "input.BudgetAgency == 'HHS'", 
-  selectInput("BudgetComponentHHS", "Component", choices = c("CDC", "ACF", "OIG"), selected = c("CDC"))
-)
-
-conditionalPanel(
-  condition = "input.BudgetAgency == 'DOS'", 
-  selectInput("BudgetComponentDOS", "Component", choices = c("DOS-MAIN", "OIG"), selected = c("OIG"))
-)
-
-# TOOK OUT:
-# data_choices_agencybudgets <- c("Total Budget Received" = "Total.Budget.Received", "Total Budget Requested" = "Total.Budget.Requested")
-
-# checkboxGroupInput("BudgetData", "Data", choices = data_choices_agencybudgets, selected = c("Total.Budget.Received"))
-
-checkboxGroupInput("BudgetYear", "Year", choices = c("2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022"), selected = c("2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018","2019", "2020", "2021", "2022"))
 ```
-
-<br/>
-For more information about the FOIA, see [foia.gov](https://www.foia.gov).
 
 Row {data-height=400}
 -------------------------------------
@@ -797,116 +680,60 @@ Row {data-height=400}
 ###
 
 ```{r}
+# Reactive values list to hold the inputs
+# Update the variable name and the variables inside observe({})
+agencyBudget_input_values <- reactiveValues()
+
+observe({
+  agencyBudget_input_values$agency <- input[[agencyBudgets_data_list$agency_id]]
+  agencyBudget_input_values$component <- input[[agencyBudgets_data_list$component_id]]
+  agencyBudget_input_values$fy <- input[[agencyBudgets_data_list$fy_id]]
+  agencyBudget_input_values$data <- input[[agencyBudgets_data_list$column_id]]
+  agencyBudget_input_values$component_input_id <- agencyBudgets_data_list$component_id
+})
+
+# update component selection
+observe({
+  req(agencyBudget_input_values$agency)
+  updateSelectInput(
+    session, agencyBudget_input_values$component_input_id, "Component",
+    choices = component_list[[agencyBudget_input_values$agency]],
+    selected = component_list[[agencyBudget_input_values$agency]][c(1,2)]
+  )
+})
+
 filtered_data_budget <- reactive({
-  if (input$BudgetAgency == "DHS") {
-    DHS_budgets <- read.csv("Homeland_budgets.csv")
-    return(DHS_budgets)
-  } else if (input$BudgetAgency == "DOL") {
-    Labor_budgets <- read.csv("Labor_budgets.csv")
-  } else if (input$BudgetAgency == "DOJ") {
-    Justice_budgets <- read.csv("Justice_budgets.csv")
-  } else if (input$BudgetAgency == "DOS") {
-    State_budgets <- read.csv("State_budgets.csv")
-  } else if (input$BudgetAgency == "HHS") {
-    Human_services_budgets <- read.csv("Human_services_budgets.csv")
-  } else if (input$BudgetAgency == "HUD") {
-    Urban_budgets <- read.csv("Urban_budgets.csv")
-  } else if (input$BudgetAgency == "DOD") {
-    Defense_budgets <- read.csv("Defense_budgets.csv")
-  } else if (input$BudgetAgency == "VA") {
-    Veterans_budgets <- read.csv("Veterans_budgets.csv")
-  } else if (input$BudgetAgency == "Treasury") {
-    Treasury_budgets <- read.csv("Treasury_budgets.csv")
-  } else if (input$BudgetAgency == "Education") {
-    Education_budgets <- read.csv("Education_budgets.csv")
-  } else if (input$BudgetAgency == "Energy") {
-    Energy_budgets <- read.csv("Energy_budgets.csv")
-  } else if (input$BudgetAgency == "Commerce") {
-    Commerce_budgets <- read.csv("Commerce_budgets.csv")
-  } else if (input$BudgetAgency == "Agriculture") {
-    Agriculture_budgets <- read.csv("Agriculture_budgets.csv")
-  } else if (input$BudgetAgency == "Interior") {
-    Interior_budgets <- read.csv("Interior_budgets.csv")
-  }
+  req(agencyBudget_input_values$agency)
+  load_budget_data(
+    agencyBudget_input_values$agency,
+    data_dir = csv_dir
+  )
 })
 
-#____
-
-filtered_input_budget_DHS <- reactive({
-  if (input$BudgetComponentDHS == "USCIS") {
-    column_to_plot <- c("USCIS_budget")
-  } else if (input$BudgetComponentDHS == "CBP") {
-    column_to_plot <- c("CBP_budget")
-  } else if (input$BudgetComponentDHS == "PRIV") {
-    column_to_plot <- c("PRIV_budget")
-  } else if (input$BudgetComponentDHS == "ICE") {
-    column_to_plot <- c("ICE_budget")
-  } else if (input$BudgetComponentDHS == "OIG") {
-    column_to_plot <- c("OIG_budget")
-  } else if (input$BudgetComponentDHS == "CRCL") {
-    column_to_plot <- c("CRCL_budget")
+filtered_input_budget <- reactive({
+  component <- agencyBudget_input_values$component
+  
+  if (component == "DoS") {
+    component <- "DOS_main"
   }
+  
+  column_to_plot <- paste0(component, "_budget")
+  return(column_to_plot)
 })
 
-filtered_input_budget_DOJ <- reactive({
-  if (input$BudgetComponentDOJ == "EOIR") {
-    column_to_plot <- c("EOIR_budget")
-  } else if (input$BudgetComponentDOJ == "OIG") {
-    column_to_plot <- c("OIG_budget")
-  }
-})
-
-filtered_input_budget_DOL <- reactive({
-  if (input$BudgetComponentDOL == "OSHA") {
-    column_to_plot <- c("OSHA_budget")
-  } else if (input$BudgetComponentDOL == "OSEC") {
-    column_to_plot <- c("OSEC_budget")
-  } else if (input$BudgetComponentDOL == "OIG") {
-    column_to_plot <- c("OIG_budget")
-  } else if (input$BudgetComponentDOL == "WHD") {
-    column_to_plot <- c("WHD_budget")
-  }
-})
-
-filtered_input_budget_HHS <- reactive({
-  if (input$BudgetComponentHHS == "CDC") {
-    column_to_plot <- c("CDC_budget")
-  } else if (input$BudgetComponentHHS == "ACF") {
-    column_to_plot <- c("ACF_budget")
-  } else if (input$BudgetComponentHHS == "OIG") {
-    column_to_plot <- c("OIG_budget")
-  }
-})
-
-filtered_input_budget_DOS <- reactive({
-  if (input$BudgetComponentDOS == "DOS-MAIN") {
-    column_to_plot <- c("DOS_main_budget")
-  } else if (input$BudgetComponentDOS == "OIG") {
-    column_to_plot <- c("OIG_budget")
-  }
+budget_year <- reactive({
+  paste0("20", agencyBudget_input_values$fy)
 })
 
 renderPlotly({
   # Check the selected agency
-  selected_agency <- input$BudgetAgency
-  
-  if (selected_agency == "DHS") {
-    plot_two_columns(filtered_data_budget(), filtered_input_budget_DHS(), input$BudgetYear)
-  } else if (selected_agency == "DOJ") {
-    plot_two_columns(filtered_data_budget(), filtered_input_budget_DOJ(), input$BudgetYear)
-  } else if (selected_agency == "DOL") {
-    plot_two_columns(filtered_data_budget(), filtered_input_budget_DOL(), input$BudgetYear)
-  } else if (selected_agency == "HHS") {
-    plot_two_columns(filtered_data_budget(), filtered_input_budget_HHS(), input$BudgetYear)
-  } else if (selected_agency == "DOS") {
-    plot_two_columns(filtered_data_budget(), filtered_input_budget_DOS(), input$BudgetYear)
-  }
+  plot_two_columns(
+    filtered_data_budget(),
+    filtered_input_budget(),
+    budget_year(),
+    debug = TRUE
+  )
 })
-
-#renderPlotly({
-#  plot_two_columns(filtered_data_budget(), input$BudgetData, input$BudgetYear)
-#})
-
 ```
 
 
@@ -917,39 +744,6 @@ Row {data-height=200}
 ###
 
 ```{r}
-filtered_data_budget <- reactive({
-  if (input$BudgetAgency == "DHS") {
-    DHS_budgets <- read.csv("Homeland_budgets.csv")
-    return(DHS_budgets)
-  } else if (input$BudgetAgency == "DOL") {
-    Labor_budgets <- read.csv("Labor_budgets.csv")
-  } else if (input$BudgetAgency == "DOJ") {
-    Justice_budgets <- read.csv("Justice_budgets.csv")
-  } else if (input$BudgetAgency == "DOS") {
-    State_budgets <- read.csv("State_budgets.csv")
-  } else if (input$BudgetAgency == "HHS") {
-    Human_services_budgets <- read.csv("Human_services_budgets.csv")
-  } else if (input$BudgetAgency == "HUD") {
-    Urban_budgets <- read.csv("Urban_budgets.csv")
-  } else if (input$BudgetAgency == "DOD") {
-    Defense_budgets <- read.csv("Defense_budgets.csv")
-  } else if (input$BudgetAgency == "VA") {
-    Veterans_budgets <- read.csv("Veterans_budgets.csv")
-  } else if (input$BudgetAgency == "Treasury") {
-    Treasury_budgets <- read.csv("Treasury_budgets.csv")
-  } else if (input$BudgetAgency == "Education") {
-    Education_budgets <- read.csv("Education_budgets.csv")
-  } else if (input$BudgetAgency == "Energy") {
-    Energy_budgets <- read.csv("Energy_budgets.csv")
-  } else if (input$BudgetAgency == "Commerce") {
-    Commerce_budgets <- read.csv("Commerce_budgets.csv")
-  } else if (input$BudgetAgency == "Agriculture") {
-    Agriculture_budgets <- read.csv("Agriculture_budgets.csv")
-  } else if (input$BudgetAgency == "Interior") {
-    Interior_budgets <- read.csv("Interior_budgets.csv")
-  }
-})
-
 renderTable(filtered_data_budget())
 ```
 
@@ -1030,19 +824,19 @@ Row {data-height=300}
 ```{r}
 filtered_data_budget_compare <- reactive({
   if (input$BudgetCompareAgency == "DHS") {
-    DHS_budget_ratios <- read.csv("Homeland_ratios.csv")
+    DHS_budget_ratios <- read.csv("data/csv/Homeland_ratios.csv")
     return(DHS_budget_ratios)
   } else if (input$BudgetCompareAgency == "DOL") {
-    DOL_budget_ratios <- read.csv("Labor_ratios.csv")
+    DOL_budget_ratios <- read.csv("data/csv/Labor_ratios.csv")
     return(DOL_budget_ratios)
   } else if (input$BudgetCompareAgency == "DOJ") {
-    DOJ_budget_ratios <- read.csv("Justice_ratios.csv")
+    DOJ_budget_ratios <- read.csv("data/csv/Justice_ratios.csv")
     return(DOJ_budget_ratios)
   } else if (input$BudgetCompareAgency == "HHS") {
-    HHS_budget_ratios <- read.csv("Human_services_ratios.csv")
+    HHS_budget_ratios <- read.csv("data/csv/Human_services_ratios.csv")
     return(HHS_budget_ratios)
   } else if (input$BudgetCompareAgency == "DOS") {
-    DOS_budget_ratios <- read.csv("State_ratios.csv")
+    DOS_budget_ratios <- read.csv("data/csv/State_ratios.csv")
     return(DOS_budget_ratios)
   }
 })
@@ -1137,19 +931,19 @@ Row {data-height=300}
 ```{r}
 filtered_data_budget_compare_backlog <- reactive({
   if (input$BudgetCompareAgency == "DHS") {
-    DHS_budget_ratios <- read.csv("Homeland_ratios.csv")
+    DHS_budget_ratios <- read.csv("data/csv/Homeland_ratios.csv")
     return(DHS_budget_ratios)
   } else if (input$BudgetCompareAgency == "DOL") {
-    DOL_budget_ratios <- read.csv("Labor_ratios.csv")
+    DOL_budget_ratios <- read.csv("data/csv/Labor_ratios.csv")
     return(DOL_budget_ratios)
   } else if (input$BudgetCompareAgency == "DOJ") {
-    DOJ_budget_ratios <- read.csv("Justice_ratios.csv")
+    DOJ_budget_ratios <- read.csv("data/csv/Justice_ratios.csv")
     return(DOJ_budget_ratios)
   } else if (input$BudgetCompareAgency == "DOS") {
-    DOS_budget_ratios <- read.csv("State_ratios.csv")
+    DOS_budget_ratios <- read.csv("data/csv/State_ratios.csv")
     return(DOS_budget_ratios)
   } else if (input$BudgetCompareAgency == "HHS") {
-    HHS_budget_ratios <- read.csv("Human_services_ratios.csv")
+    HHS_budget_ratios <- read.csv("data/csv/Human_services_ratios.csv")
     return(HHS_budget_ratios)
   }
 })

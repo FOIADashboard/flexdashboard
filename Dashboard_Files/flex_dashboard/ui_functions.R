@@ -1,6 +1,10 @@
 ui_function <- function(
-    section_agency_id, section_component_id, section_fy_id,
-    custom_column_select_ui) {
+    section_agency_id, 
+    section_component_id, 
+    section_fy_id,
+    custom_column_select_ui, 
+    agencies = c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS"),
+    component_select_function = checkboxGroupInput) {
   
   tagList(
     # 
@@ -13,14 +17,14 @@ ui_function <- function(
     ), 
     # Agency selection
     selectInput(section_agency_id, "Agency", 
-                choices = c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS"), 
+                choices = agencies, 
                 selected = "DHS"),
     
     # Data (column) selection
     custom_column_select_ui,
     
     # Component selection
-    checkboxGroupInput(
+    component_select_function(
       section_component_id,
       "Component",
       choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"), 
