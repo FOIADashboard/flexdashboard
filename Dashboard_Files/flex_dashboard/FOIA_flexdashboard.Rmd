@@ -23,8 +23,12 @@ library(tidyr)
 library(ggplot2)
 library(stringr)
 
+# load functions used in script
+source("functions.R")
+source("ui_functions.R")
+
 # global variables
-rda_dir <- "data/rda"
+rds_dir <- "data/rds"
 csv_dir <- "data/csv"
 agencies <- c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS")
 component_list <- list(
@@ -38,10 +42,8 @@ component_list <- list(
   "DOS" = c("OIG", "DoS")
 )
 
-# load functions used in script
-source("functions.R")
-source("ui_functions.R")
-
+# load foia data for all agencies
+master_foia_data <- load_all_agencies(agencies, data_dir = rds_dir)
 ```
 
 Personnel/Cost
@@ -104,12 +106,7 @@ observe({
 # Update filtered data variable name
 personnel_filtered_data <- reactive({
   req(personnel_input_values$agency)
-  load_foia(
-    input_data = personnel_input_values$agency,
-    possible_agencies = agencies,
-    section_name = "PersonnelAndCostSection",
-    data_dir = rda_dir
-  )
+  master_foia_data[[personnel_input_values$agency]][["PersonnelAndCostSection"]]
 })
 
 observe({
@@ -202,12 +199,7 @@ observe({
 # Update filtered data variable name
 backlog_filtered_data <- reactive({
   req(backlog_input_values$agency)
-  load_foia(
-    input_data = backlog_input_values$agency,
-    possible_agencies = agencies,
-    section_name = "BacklogSection",
-    data_dir = rda_dir
-  )
+  master_foia_data[[backlog_input_values$agency]][["BacklogSection"]]
 })
 
 observe({
@@ -286,12 +278,7 @@ observe({
 # Update filtered data variable name
 expedited_filtered_data <- reactive({
   req(expedited_input_values$agency)
-  load_foia(
-    input_data = expedited_input_values$agency,
-    possible_agencies = agencies,
-    section_name = "ExpeditedProcessingSection",
-    data_dir = rda_dir
-  )
+  master_foia_data[[expedited_input_values$agency]][["ExpeditedProcessingSection"]]
 })
 
 observe({
@@ -385,12 +372,7 @@ observe({
 # Update filtered data variable name
 PR_filtered_data <- reactive({
   req(pr_input_values$agency)
-  load_foia(
-    input_data = pr_input_values$agency,
-    possible_agencies = agencies,
-    section_name = "ProcessedRequestSection",
-    data_dir = rda_dir
-  )
+  master_foia_data[[pr_input_values$agency]][["ProcessedRequestSection"]]
 })
 
 observe({
@@ -449,15 +431,15 @@ pendingR_data_list <- list(
 # column select UI. Update the variable name
 pendingR_column_select_ui <- selectInput(
   pendingR_data_list$column_id, "Statistic", 
-  choices = c("Simple Pending Requests" = "SimplePendingRequestStatisticsPendingRequestQuantity",
-              "Simple Median Days" = "SimplePendingRequestStatisticsPendingRequestMedianDaysValue",
-              "Simple Average Days" ="SimplePendingRequestStatisticsPendingRequestAverageDaysValue",
-              "Complex Pending Requests" = "ComplexPendingRequestStatisticsPendingRequestQuantity",
-              "Complex Median Days" = "ComplexPendingRequestStatisticsPendingRequestMedianDaysValue",
-              "Complex Average Days" = "ComplexPendingRequestStatisticsPendingRequestAverageDaysValue",
-              "Expedited Pending Requests" = "ExpeditedPendingRequestStatisticsPendingRequestQuantity",
-              "Expedited Median Days" = "ExpeditedPendingRequestStatisticsPendingRequestMedianDaysValue",
-              "Expedited Average Days" = "ExpeditedPendingRequestStatisticsPendingRequestAverageDaysValue"), 
+  choices = c("Simple Pending Requests" = "SimplePendingRequestStatistics_PendingRequestQuantity",
+              "Simple Median Days" = "SimplePendingRequestStatistics_PendingRequestMedianDaysValue",
+              "Simple Average Days" ="SimplePendingRequestStatistics_PendingRequestAverageDaysValue",
+              "Complex Pending Requests" = "ComplexPendingRequestStatistics_PendingRequestQuantity",
+              "Complex Median Days" = "ComplexPendingRequestStatistics_PendingRequestMedianDaysValue",
+              "Complex Average Days" = "ComplexPendingRequestStatistics_PendingRequestAverageDaysValue",
+              "Expedited Pending Requests" = "ExpeditedPendingRequestStatistics_PendingRequestQuantity",
+              "Expedited Median Days" = "ExpeditedPendingRequestStatistics_PendingRequestMedianDaysValue",
+              "Expedited Average Days" = "ExpeditedPendingRequestStatistics_PendingRequestAverageDaysValue"), 
   selected = "Simple Pending Requests")
 
 # create UI. Update the variables
@@ -488,13 +470,7 @@ observe({
 # Update filtered data variable name
 pendingR_filtered_data <- reactive({
   req(pendingR_input_values$agency)
-  load_foia(
-    input_data = pendingR_input_values$agency,
-    possible_agencies = agencies,
-    section_name = "PendingPerfectedRequestsSection",
-    data_dir = rda_dir,
-    ppr = TRUE
-  )
+  master_foia_data[[pendingR_input_values$agency]][["PendingPerfectedRequestsSection"]]
 })
 
 observe({
@@ -508,23 +484,23 @@ observe({
 
 # Maps the column name to the plot title
 filtered_input_manual_title_pendingR <- reactive({
-  if (pendingR_input_values$data == "SimplePendingRequestStatisticsPendingRequestQuantity") {
+  if (pendingR_input_values$data == "SimplePendingRequestStatistics_PendingRequestQuantity") {
     return("Simple Pending Request Quantity")
-  } else if (pendingR_input_values$data == "SimplePendingRequestStatisticsPendingRequestMedianDaysValue") {
+  } else if (pendingR_input_values$data == "SimplePendingRequestStatistics_PendingRequestMedianDaysValue") {
     return("Simple Pending Request Median Days")
-  } else if (pendingR_input_values$data == "SimplePendingRequestStatisticsPendingRequestAverageDaysValue") {
+  } else if (pendingR_input_values$data == "SimplePendingRequestStatistics_PendingRequestAverageDaysValue") {
     return("Simple Pending Request Average Days")
-  } else if (pendingR_input_values$data == "ComplexPendingRequestStatisticsPendingRequestQuantity") {
+  } else if (pendingR_input_values$data == "ComplexPendingRequestStatistics_PendingRequestQuantity") {
     return("Complex Pending Request Quantity")
-  } else if (pendingR_input_values$data == "ComplexPendingRequestStatisticsPendingRequestMedianDaysValue") {
+  } else if (pendingR_input_values$data == "ComplexPendingRequestStatistics_PendingRequestMedianDaysValue") {
     return("Complex Pending Request Median Days")
-  } else if (pendingR_input_values$data == "ComplexPendingRequestStatisticsPendingRequestAverageDaysValue") {
+  } else if (pendingR_input_values$data == "ComplexPendingRequestStatistics_PendingRequestAverageDaysValue") {
     return("Complex Pending Request Average Days")
-  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatisticsPendingRequestQuantity") {
+  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatistics_PendingRequestQuantity") {
     return("Expedited Pending Request Quantity")
-  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatisticsPendingRequestMedianDaysValue") {
+  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatistics_PendingRequestMedianDaysValue") {
     return("Expedited Pending Request Median Days")
-  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatisticsPendingRequestAverageDaysValue") {
+  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatistics_PendingRequestAverageDaysValue") {
     return("Expedited Pending Request Average Days")
   } else {
     return(NULL)  # Return NULL if no match is found
@@ -599,12 +575,7 @@ observe({
 # Update filtered data variable name
 appealDisp_filtered_data <- reactive({
   req(appealDisp_input_values$agency)
-  load_foia(
-    input_data = appealDisp_input_values$agency,
-    possible_agencies = agencies,
-    section_name = "AppealDispositionSection",
-    data_dir = rda_dir
-  )
+  master_foia_data[[appealDisp_input_values$agency]][["AppealDispositionSection"]]
 })
 
 observe({
@@ -859,11 +830,23 @@ BB_year <- reactive({
 })
 
 renderPlotly({
-  plot_single_column_budget(
-    filtered_data_budget_compare(),
-    filtered_input_budget_compare(),
-    BB_year()
-  )
+  # temporary solution to missing budget column name (some missing underscore)
+  if (!(filtered_input_budget_compare() %in% colnames(filtered_data_budget_compare()))) {
+    plot_colname_budget_compare <- str_replace(filtered_input_budget_compare(), "_", ".")
+  } else {
+    plot_colname_budget_compare <- filtered_input_budget_compare()
+  }
+  
+  if (plot_colname_budget_compare %in% colnames(filtered_data_budget())){
+    plot_single_column_budget(
+      filtered_data_budget_compare(),
+      plot_colname_budget_compare,
+      BB_year()
+    )
+  } else {
+    warning(str_glue("Column {plot_colname_budget_compare} not found in dataset."))
+    return(NULL)
+  }
 })
 ```
 
@@ -886,11 +869,23 @@ filtered_input_budget_compare_backlog <- reactive({
 })
 
 renderPlotly({
-  plot_single_column_backlog(
-    filtered_data_budget_compare(), 
-    filtered_input_budget_compare_backlog(),
-    BB_year()
-  )
+  # temporary solution to missing budget column name (some missing underscore)
+  if (!(filtered_input_budget_compare_backlog() %in% colnames(filtered_data_budget_compare()))) {
+    plot_colname_budget_compare_backlog <- str_replace(filtered_input_budget_compare_backlog(), "_", ".")
+  } else {
+    plot_colname_budget_compare_backlog <- filtered_input_budget_compare_backlog()
+  }
+  
+  if (plot_colname_budget_compare_backlog %in% colnames(filtered_data_budget())){
+    plot_single_column_backlog(
+      filtered_data_budget_compare(), 
+      plot_colname_budget_compare_backlog,
+      BB_year()
+    )
+  } else {
+    warning(str_glue("Column {plot_colname_budget_compare_backlog} not found in dataset."))
+    return(NULL)
+  }
 })
 ```
 

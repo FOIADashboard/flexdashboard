@@ -11,6 +11,15 @@ load_foia <- function(input_data, possible_agencies, section_name, data_dir = ".
   return(foia_data[[section_name]])
 }
 
+load_all_agencies <- function(agency_list, data_dir = ".") {
+  agency_data <- list()
+  for (agency in agency_list) {
+    data_ <- readRDS(file.path(data_dir, str_glue("{agency}_data.rds")))
+    agency_data[[agency]] <- data_
+  }
+  return(agency_data)
+}
+
 load_budget_data <- function(input_data, data_dir = ".") {
   filenames <- c(
     "DHS" = "Homeland_budgets.csv",
@@ -122,7 +131,7 @@ plot_two_columns <- function(data, selected_columns, selected_years, debug = FAL
 plot_single_column_budget <- function(data, column_to_plot, selected_years) {
   plot_data <- data %>%
     filter(Year %in% selected_years) %>%
-    select(Year, {{ column_to_plot }}) %>%
+    select(Year, all_of(column_to_plot)) %>%
     pivot_longer(cols = -Year, names_to = "Metric", values_to = "Value")
   
   plot_data <- na.omit(plot_data)
@@ -146,7 +155,7 @@ plot_single_column_budget <- function(data, column_to_plot, selected_years) {
 plot_single_column_backlog <- function(data, column_to_plot_backlog, selected_years) {
   plot_data <- data %>%
     filter(Year %in% selected_years) %>%
-    select(Year, {{ column_to_plot_backlog }}) %>%
+    select(Year, all_of(column_to_plot_backlog)) %>%
     pivot_longer(cols = -Year, names_to = "Metric", values_to = "Value")
   
   plot_data <- na.omit(plot_data)
