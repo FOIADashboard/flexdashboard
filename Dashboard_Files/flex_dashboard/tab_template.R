@@ -1,3 +1,10 @@
+# The code here serves as a template for each tab in the dashboard.
+# The code assumes sidebar layout in flexdashboard.
+# UI and Server portions should be copied to separate chunks.
+# Variables enclosed in {} should be updated with the appropriate values.
+# Some functions and variables such as "ui_function" and "master_foia_data"
+# are defined in the beginning of the flexdashboard or in a separate file.
+# There are plenty of examples in the original flexdashboard file.
 
 # UI ----------------------------------------------------------------------
 
@@ -44,11 +51,7 @@ observe({
 # Update filtered data variable name
 {FILTERED_DATA} <- reactive({
   req({INPUT_VALUES}$agency)
-  load_foia(
-    input_data = {INPUT_VALUES}$agency,
-    possible_agencies = agencies,
-    section_name = "PLACEHOLDER"
-  )
+  master_foia_data[[{INPUT_VALUES}$agency]][["_____________"]]
 })
 
 # update component selection

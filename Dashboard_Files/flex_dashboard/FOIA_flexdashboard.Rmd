@@ -44,6 +44,8 @@ component_list <- list(
 
 # load foia data for all agencies
 master_foia_data <- load_all_agencies(agencies, data_dir = rds_dir)
+
+# UI and Server code template is available in tab_template.R file.
 ```
 
 Personnel/Cost
@@ -891,8 +893,6 @@ renderPlotly({
 
 ABOUT
 =====================================
-
-
 
 Inputs {.sidebar}
 -------------------------------------
