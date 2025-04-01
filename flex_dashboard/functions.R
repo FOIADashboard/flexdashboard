@@ -51,6 +51,15 @@ load_ratios_data <- function(input_data, data_dir = ".") {
   return(read.csv(file.path(data_dir, filenames[input_data])))
 }
 
+load_all_agencies_budget <- function(agency_list, data_dir = ".") {
+  budget_data <- list()
+  for (agency in agency_list) {
+    data_ <- readr::read_csv(file.path(data_dir, str_glue("{agency}_budget_ratio.csv")))
+    budget_data[[agency]] <- data_
+  }
+  return(budget_data)
+}
+
 plot_single_column <- function(data, column_name, selected_components, selected_years, manual_titles = NULL, debug = FALSE) {
   
   if (debug) {

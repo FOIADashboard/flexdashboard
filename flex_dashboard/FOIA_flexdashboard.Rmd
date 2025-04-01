@@ -22,6 +22,7 @@ library(plotly)
 library(tidyr)
 library(ggplot2)
 library(stringr)
+library(readr)
 
 # load functions used in script
 source("functions.R")
@@ -44,6 +45,9 @@ component_list <- list(
 
 # load foia data for all agencies
 master_foia_data <- load_all_agencies(agencies, data_dir = rds_dir)
+master_budget_data <- load_all_agencies_budget(
+  c("DHS", "DOL", "DOJ", "HHS", "DOS"), data_dir = csv_dir
+)
 
 # UI and Server code template is available in tab_template.R file.
 ```
@@ -697,10 +701,11 @@ observe({
 # update filtered data variable name
 filtered_data_budget <- reactive({
   req(agencyBudget_input_values$agency)
-  load_budget_data(
-    agencyBudget_input_values$agency,
-    data_dir = csv_dir
-  )
+  # load_budget_data(
+  #   agencyBudget_input_values$agency,
+  #   data_dir = csv_dir
+  # )
+  master_budget_data[[agencyBudget_input_values$agency]]
 })
 
 filtered_input_budget <- reactive({
@@ -811,10 +816,11 @@ observe({
 # Update filtered data variable name
 filtered_data_budget_compare <- reactive({
   req(BB_input_values$agency)
-  load_ratios_data(
-    BB_input_values$agency,
-    data_dir = csv_dir
-  )
+  # load_ratios_data(
+  #   BB_input_values$agency,
+  #   data_dir = csv_dir
+  # )
+  master_budget_data[[BB_input_values$agency]]
 })
 
 # update component selection
