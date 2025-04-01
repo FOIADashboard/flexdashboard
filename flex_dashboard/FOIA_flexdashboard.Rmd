@@ -839,7 +839,7 @@ renderPlotly({
     plot_colname_budget_compare <- filtered_input_budget_compare()
   }
   
-  if (plot_colname_budget_compare %in% colnames(filtered_data_budget())){
+  if (plot_colname_budget_compare %in% colnames(filtered_data_budget_compare())){
     plot_single_column_budget(
       filtered_data_budget_compare(),
       plot_colname_budget_compare,
@@ -878,7 +878,7 @@ renderPlotly({
     plot_colname_budget_compare_backlog <- filtered_input_budget_compare_backlog()
   }
   
-  if (plot_colname_budget_compare_backlog %in% colnames(filtered_data_budget())){
+  if (plot_colname_budget_compare_backlog %in% colnames(filtered_data_budget_compare())){
     plot_single_column_backlog(
       filtered_data_budget_compare(), 
       plot_colname_budget_compare_backlog,

@@ -129,6 +129,12 @@ plot_two_columns <- function(data, selected_columns, selected_years, debug = FAL
 }
 
 plot_single_column_budget <- function(data, column_to_plot, selected_years) {
+  
+  all_missing <- all(is.na(data[[column_to_plot]]))
+  if (all_missing) {
+    return(NULL)
+  }
+  
   plot_data <- data %>%
     filter(Year %in% selected_years) %>%
     select(Year, all_of(column_to_plot)) %>%
@@ -153,6 +159,12 @@ plot_single_column_budget <- function(data, column_to_plot, selected_years) {
 }
 
 plot_single_column_backlog <- function(data, column_to_plot_backlog, selected_years) {
+  
+  all_missing <- all(is.na(data[[column_to_plot_backlog]]))
+  if (all_missing) {
+    return(NULL)
+  }
+  
   plot_data <- data %>%
     filter(Year %in% selected_years) %>%
     select(Year, all_of(column_to_plot_backlog)) %>%
