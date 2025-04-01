@@ -86,6 +86,7 @@ ui_function(
   section_component_id = personnel_data_list$component_id, 
   section_fy_id = personnel_data_list$fy_id, 
   custom_column_select_ui = personnel_column_select_ui,
+  sidebar_text_list = sidebar_text_list_1,
   agencies = agencies)
 ```
 
@@ -180,6 +181,7 @@ ui_function(
   section_component_id = backlog_data_list$component_id, 
   section_fy_id = backlog_data_list$fy_id, 
   custom_column_select_ui = backlog_column_select_ui,
+  sidebar_text_list = sidebar_text_list_1,
   agencies = agencies)
 ```
 
@@ -260,6 +262,7 @@ ui_function(
   section_component_id = expedited_data_list$component_id, 
   section_fy_id = expedited_data_list$fy_id, 
   custom_column_select_ui = expedited_column_select_ui,
+  sidebar_text_list = sidebar_text_list_1,
   agencies = agencies)
 ```
 
@@ -355,6 +358,7 @@ ui_function(
   section_component_id = PR_data_list$component_id, 
   section_fy_id = PR_data_list$fy_id, 
   custom_column_select_ui = PR_column_select_ui,
+  sidebar_text_list = sidebar_text_list_1,
   agencies = agencies)
 ```
 
@@ -454,6 +458,7 @@ ui_function(
   section_component_id = pendingR_data_list$component_id, 
   section_fy_id = pendingR_data_list$fy_id, 
   custom_column_select_ui = pendingR_column_select_ui,
+  sidebar_text_list = sidebar_text_list_1,
   agencies = agencies)
 ```
 
@@ -558,6 +563,7 @@ ui_function(
   section_component_id = appealDisp_data_list$component_id, 
   section_fy_id = appealDisp_data_list$fy_id, 
   custom_column_select_ui = appealDisp_column_select_ui,
+  sidebar_text_list = sidebar_text_list_1,
   agencies = c("DHS", "DOJ", "DOS", "DOL"))
 ```
 
@@ -654,6 +660,7 @@ ui_function(
   section_component_id = agencyBudgets_data_list$component_id,
   section_fy_id = agencyBudgets_data_list$fy_id,
   custom_column_select_ui = agencyBudgets_column_select_ui,
+  sidebar_text_list = sidebar_text_list_budgets,
   agencies = c("DHS", "DOJ", "HHS", "DOS", "DOL"),
   component_select_ui = agencyBudgets_component_select_ui
 )
@@ -777,6 +784,7 @@ ui_function(
   section_component_id = BB_data_list$component_id, 
   section_fy_id = BB_data_list$fy_id, 
   custom_column_select_ui = BB_column_select_ui,
+  sidebar_text_list = sidebar_text_list_1,
   agencies = c("DHS", "DOJ", "HHS", "DOS", "DOL"),
   component_select_ui = BB_component_select_ui
 )
