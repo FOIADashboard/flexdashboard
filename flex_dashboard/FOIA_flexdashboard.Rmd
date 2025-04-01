@@ -85,7 +85,8 @@ ui_function(
   section_agency_id = personnel_data_list$agency_id, 
   section_component_id = personnel_data_list$component_id, 
   section_fy_id = personnel_data_list$fy_id, 
-  custom_column_select_ui = personnel_column_select_ui)
+  custom_column_select_ui = personnel_column_select_ui,
+  agencies = agencies)
 ```
 
 Row {data-height=300}
@@ -178,7 +179,8 @@ ui_function(
   section_agency_id = backlog_data_list$agency_id, 
   section_component_id = backlog_data_list$component_id, 
   section_fy_id = backlog_data_list$fy_id, 
-  custom_column_select_ui = backlog_column_select_ui)
+  custom_column_select_ui = backlog_column_select_ui,
+  agencies = agencies)
 ```
 
 Row {data-height=300}
@@ -257,7 +259,8 @@ ui_function(
   section_agency_id = expedited_data_list$agency_id, 
   section_component_id = expedited_data_list$component_id, 
   section_fy_id = expedited_data_list$fy_id, 
-  custom_column_select_ui = expedited_column_select_ui)
+  custom_column_select_ui = expedited_column_select_ui,
+  agencies = agencies)
 ```
 
 Row {data-height=300}
@@ -351,7 +354,8 @@ ui_function(
   section_agency_id = PR_data_list$agency_id, 
   section_component_id = PR_data_list$component_id, 
   section_fy_id = PR_data_list$fy_id, 
-  custom_column_select_ui = PR_column_select_ui)
+  custom_column_select_ui = PR_column_select_ui,
+  agencies = agencies)
 ```
 
 Row {data-height=300}
@@ -449,7 +453,8 @@ ui_function(
   section_agency_id = pendingR_data_list$agency_id, 
   section_component_id = pendingR_data_list$component_id, 
   section_fy_id = pendingR_data_list$fy_id, 
-  custom_column_select_ui = pendingR_column_select_ui)
+  custom_column_select_ui = pendingR_column_select_ui,
+  agencies = agencies)
 ```
 
 Row {data-height=300}
@@ -553,8 +558,7 @@ ui_function(
   section_component_id = appealDisp_data_list$component_id, 
   section_fy_id = appealDisp_data_list$fy_id, 
   custom_column_select_ui = appealDisp_column_select_ui,
-  agencies = c("DHS", "EPA", "DOL", "DOS")
-)
+  agencies = c("DHS", "DOJ", "DOS", "DOL"))
 ```
 
 Row {data-height=300}
