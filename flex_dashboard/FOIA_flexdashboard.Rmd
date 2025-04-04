@@ -32,6 +32,7 @@ source("ui_functions.R")
 rds_dir <- "data/rds"
 csv_dir <- "data/csv"
 agencies <- c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS")
+agencies_budget <- c("DHS", "DOL", "DOJ", "HHS", "DOS")
 component_list <- list(
   "DHS" = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"),
   "EPA" = c("HQ", "Region 1", "Region 2", "Region 3",
@@ -46,670 +47,342 @@ component_list <- list(
 # load foia data for all agencies
 master_foia_data <- load_all_agencies(agencies, data_dir = rds_dir)
 master_budget_data <- load_all_agencies_budget(
-  c("DHS", "DOL", "DOJ", "HHS", "DOS"), data_dir = csv_dir
-)
+  c("DHS", "DOL", "DOJ", "HHS", "DOS"), data_dir = csv_dir)
 
-# UI and Server code template is available in tab_template.R file.
-```
+# Possible sections for FOIA data
+# The vector is formmated such that
+# c("Name to display in dropdown" = "section_name", ...)
+section_choices <- c(
+    "Personnel and Cost" = "PersonnelAndCostSection",
+    "Backlog" = "BacklogSection",
+    "Expedited Processing" = "ExpeditedProcessingSection",
+    "Processed Request" = "ProcessedRequestSection",
+    "Pending Perfected Requests" = "PendingPerfectedRequestsSection",
+    "Appeal Disposition" = "AppealDispositionSection")
+selected_section_on_startup <- "PersonnelAndCostSection"
 
-Personnel/Cost
-=====================================
-
-Inputs {.sidebar}
------------------------------------
-
-```{r}
-# define variables for section
-# update the IDs, change the list variable name, 
-# then replace the variables with ctrl + f
-personnel_data_list <- list(
-  agency_id = "PersonnelAgency",
-  component_id = "PersonnelComponent",
-  fy_id = "PersonnelFY",
-  column_id = "PersonnelData"
-)
-
-# column select UI. Update the variable name
-personnel_column_select_ui <- selectInput(
-  personnel_data_list$column_id,
-  "Data",
-  choices = c(
+# define options for selected section
+# Name in the list is the section name to access the data frame
+# The vector (element of the list) is formatted such that
+# c("Name to display in dropdown" = "column_name", ...)
+variable_choice_list <- list(
+  "PersonnelAndCostSection" = c(
     "Full Time" = "FullTimeEmployeeQuantity",
     "Equivalent Full Time" = "EquivalentFullTimeEmployeeQuantity",
     "Total Full Time Staff" = "TotalFullTimeStaffQuantity",
     "Processing Expenditure" = "ProcessingCostAmount",
     "Litigation Cost" = "LitigationCostAmount",
-    "Total Cost" = "TotalCostAmount"
-  ),
-  selected = "TotalFullTimeStaffQuantity"
+    "Total Cost" = "TotalCostAmount"),
+  "BacklogSection" = c(
+    "Backlogged Requests" = "BackloggedRequestQuantity"),
+  "ExpeditedProcessingSection" = c(
+    "Requests Granted" = "RequestGrantedQuantity",
+    "Requests Denied" = "RequestDeniedQuantity",
+    "Adjudication Median" = "AdjudicationMedianDaysValue",
+    "Adjudication Avg. Days" = "AdjudicationAverageDaysValue",
+    "Within Ten Days" = "AdjudicationWithinTenDaysQuantity"),
+  "ProcessedRequestSection" = c(
+    "Pending FY Start" = "ProcessingStatisticsPendingAtStartQuantity",
+    "Pending FY End" = "ProcessingStatisticsPendingAtEndQuantity",
+    "Requests Received" = "ProcessingStatisticsReceivedQuantity",
+    "Requests Processed" = "ProcessingStatisticsProcessedQuantity"),
+  "PendingPerfectedRequestsSection" = c(
+    "Simple Pending Requests" = "SimplePendingRequestStatistics_PendingRequestQuantity",
+    "Simple Median Days" = "SimplePendingRequestStatistics_PendingRequestMedianDaysValue",
+    "Simple Average Days" = "SimplePendingRequestStatistics_PendingRequestAverageDaysValue",
+    "Complex Pending Requests" = "ComplexPendingRequestStatistics_PendingRequestQuantity",
+    "Complex Median Days" = "ComplexPendingRequestStatistics_PendingRequestMedianDaysValue",
+    "Complex Average Days" = "ComplexPendingRequestStatistics_PendingRequestAverageDaysValue",
+    "Expedited Pending Requests" = "ExpeditedPendingRequestStatistics_PendingRequestQuantity",
+    "Expedited Median Days" = "ExpeditedPendingRequestStatistics_PendingRequestMedianDaysValue",
+    "Expedited Average Days" = "ExpeditedPendingRequestStatistics_PendingRequestAverageDaysValue"),
+  "AppealDispositionSection" = c(
+    "Affirmed On Appeal" = "AppealDispositionAffirmedQuantity",
+    "Partially Affirmed On Appeal" = "AppealDispositionPartialQuantity",
+    "Reversed On Appeal" = "AppealDispositionReversedQuantity",
+    "Appeal Closed - Other" = "AppealDispositionOtherQuantity",
+    "Number of Appeals" = "AppealDispositionTotalQuantity")
 )
 
-# create UI. Update the variables
-ui_function(
-  section_agency_id = personnel_data_list$agency_id, 
-  section_component_id = personnel_data_list$component_id, 
-  section_fy_id = personnel_data_list$fy_id, 
-  custom_column_select_ui = personnel_column_select_ui,
-  sidebar_text_list = sidebar_text_list_1,
-  agencies = agencies)
+# define manual title for each section
+# Name in the list is the section name to access the data frame
+# The vector (element of the list) is formatted such that
+# c(column_name = "Manual Title", ...)
+manual_title_list <- list(
+  "PersonnelAndCostSection" = c(
+    "FullTimeEmployeeQuantity" = "Full Time Employees",
+    "EquivalentFullTimeEmployeeQuantity" = "Equivalent Full Time Employees",
+    "TotalFullTimeStaffQuantity" = "Total Full Time Staff",
+    "ProcessingCostAmount" = "Processing Expenditures",
+    "LitigationCostAmount" = "Litigation Costs",
+    "TotalCostAmount" = "Total Costs"
+  ),
+  "ExpeditedProcessingSection" = c(
+    "RequestGrantedQuantity" = "Requests Granted",
+    "RequestDeniedQuantity" = "Requests Denied",
+    "AdjudicationMedianDaysValue" = "Median Adjudication (Days)",
+    "AdjudicationAverageDaysValue" = "Average Adjudication (Days)",
+    "AdjudicationWithinTenDaysQuantity" = "Requests Adjudicated Within Ten Days"
+  ),
+  "ProcessedRequestSection" = c(
+    "ProcessingStatisticsPendingAtStartQuantity" = "Requests Pending at FY Start",
+    "ProcessingStatisticsPendingAtEndQuantity" = "Requests Pending at FY End",
+    "ProcessingStatisticsReceivedQuantity" = "Requests Received",
+    "ProcessingStatisticsProcessedQuantity" = "Requests Processed"
+  ),
+  "PendingPerfectedRequestsSection" = c(
+    "SimplePendingRequestStatistics_PendingRequestQuantity" = "Simple Pending Requests",
+    "SimplePendingRequestStatistics_PendingRequestMedianDaysValue" = "Simple Median Days",
+    "SimplePendingRequestStatistics_PendingRequestAverageDaysValue" = "Simple Average Days",
+    "ComplexPendingRequestStatistics_PendingRequestQuantity" = "Complex Pending Requests",
+    "ComplexPendingRequestStatistics_PendingRequestMedianDaysValue" = "Complex Median Days",
+    "ComplexPendingRequestStatistics_PendingRequestAverageDaysValue" = "Complex Average Days",
+    "ExpeditedPendingRequestStatistics_PendingRequestQuantity" = "Expedited Pending Requests",
+    "ExpeditedPendingRequestStatistics_PendingRequestMedianDaysValue" = "Expedited Median Days",
+    "ExpeditedPendingRequestStatistics_PendingRequestAverageDaysValue" = "Expedited Average Days"),
+  "AppealDispositionSection" = c(
+    "AppealDispositionAffirmedQuantity" = "Affirmed on Appeal",
+    "AppealDispositionPartialQuantity" = "Partially Affirmed on Appeal",
+    "AppealDispositionReversedQuantity" = "Reversed on Appeal",
+    "AppealDispositionOtherQuantity" = "Appeals Closed for Other Reasons",
+    "AppealDispositionTotalQuantity" = "Number of Appeals")
+)
+
+# UI and Server code template is available in tab_template.R file.
 ```
 
-Row {data-height=300}
--------------------------------------
+Section Explorer
+=====================================
 
-###
+Inputs {.sidebar}
+-----------------------------------
 
 ```{r}
-# Reactive values list to hold the inputs
-# Update the variable name and the variables inside observe({})
-personnel_input_values <- reactiveValues()
-observe({
-  personnel_input_values$agency <- input[[personnel_data_list$agency_id]]
-  personnel_input_values$component <- input[[personnel_data_list$component_id]]
-  personnel_input_values$fy <- input[[personnel_data_list$fy_id]]
-  personnel_input_values$data <- input[[personnel_data_list$column_id]]
-  personnel_input_values$component_input_id <- personnel_data_list$component_id
+# Section selection
+radioButtons(
+  "section_input",
+  label="Section",
+  choices=section_choices,
+  selected=selected_section_on_startup,
+)
+
+# Agency selection
+selectInput(
+  "agency_input",
+  "Agency", 
+  choices =  agencies, 
+  selected = "DHS")
+
+# column select UI. Update the variable name
+selectInput(
+  "variable_select_input",
+  "Data",
+  choices = variable_choice_list[[selected_section_on_startup]],
+  selected = variable_choice_list[[selected_section_on_startup]][1])
+
+# component selection
+checkboxGroupInput(
+  "component_input",
+  "Component",
+  choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"), 
+  selected = c("CBP", "PRIV"))
+
+# Fiscal Year selection
+# checkboxGroupInput(
+#   "fy_input",
+#   "FY", 
+#   choices = c("10", "11", "12", "13", "14", "15", 
+#               "16", "17", "18", "19", "20", "21", 
+#               "22","23"), 
+#   selected = c("10", "11", "12", "13", "14", "15", 
+#               "16", "17", "18"))
+
+sliderInput(
+  "fy_input",
+  "FY", 
+  min = 10, 
+  max = 23, 
+  value = c(10, 23), 
+  step = 1,
+  sep = "")
+
+HTML(
+  "
+  <div style=\"font-size: smaller; word-break: break-word; overflow-wrap: break-word;\">
+    Jacqueline Stevens and Kendall McKay, FOIA Dashboard,
+    <a href=\"https://deportationresearch.shinyapps.io/FOIAdashboard/\">https://deportationresearch.shinyapps.io/FOIAdashboard/</a>
+    <br><br>
+    Copyright:
+    <a href=\"https://creativecommons.org/licenses/by-nc/4.0/\">CC BY-NC</a>
+  </div>
+  ")
+```
+
+Row {.tabset}
+-------------------------------------
+
+### Usage Guide
+
+The dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. 
+The sources for the department and component annual budgets data are available <a href="https://www.justice.gov/oip/reports-1">here</a>.
+
+Please select sections, data type, component agency(s), and fiscal year(s) using the sidebar.
+
+For more information about the FOIA, see <a href="https://www.foia.gov">foia.gov</a>.
+
+Created by <a href="https://deportation-research.buffett.northwestern.edu/people/">Kendall McKay</a> for the <a href="https://deportation-research.buffett.northwestern.edu">Deportation Research Clinic</a>.
+
+Project support provided by <a href="https://faculty.wcas.northwestern.edu/aaron-geller/">Aaron Geller</a> and <a href="https://www.linkedin.com/in/patrick-zacher/">Patrick Zacher</a> of Northwestern University's <a href="https://www.it.northwestern.edu/departments/it-services-support/research/">IT Research Computing and Data Services (RCDS)</a>.
+
+Funding provided by the Northwestern University <a href="https://www.ipr.northwestern.edu">Institute for Policy Research (IPR)</a>.
+
+### Plot
+
+```{r}
+# capture section selection
+section <- reactive({
+  input$section_input
+})
+agency <- reactive({
+  input$agency_input
+})
+component <- reactive({
+  input$component_input
+})
+fy <- reactive({
+  input$fy_input[1]:input$fy_input[2]
+})
+variable <- reactive({
+  input$variable_select_input
 })
 
 # Update filtered data variable name
-personnel_filtered_data <- reactive({
-  req(personnel_input_values$agency)
-  master_foia_data[[personnel_input_values$agency]][["PersonnelAndCostSection"]]
+filtered_data <- reactive({
+  req(agency())
+  master_foia_data[[agency()]][[section()]]
 })
 
+# update data section selection based on selected section
 observe({
-  req(personnel_input_values$agency)
+  req(section())
+  updateSelectInput(
+    session, "variable_select_input", "Data",
+    choices = variable_choice_list[[section()]],
+    selected = variable_choice_list[[section()]][[1]]
+  )
+})
+
+# update component selection based on selected agency
+observe({
+  req(agency())
   updateCheckboxGroupInput(
-    session, personnel_input_values$component_input_id, "Component",
-    choices = component_list[[personnel_input_values$agency]],
-    selected = component_list[[personnel_input_values$agency]][c(1,2)]
+    session, "component_input", "Component",
+    choices = component_list[[agency()]],
+    selected = component_list[[agency()]][c(1,2)]
   )
 })
 
 # Maps the column name to the plot title
 filtered_input_manual_title <- reactive({
-  if (personnel_input_values$data == "FullTimeEmployeeQuantity") {
-    return("Full Time Employees")
-  } else if (personnel_input_values$data == "EquivalentFullTimeEmployeeQuantity") {
-    return("Equivalent Full Time Employees")
-  } else if (personnel_input_values$data == "TotalFullTimeStaffQuantity") {
-    return("Total Full Time Staff")
-  } else if (personnel_input_values$data == "ProcessingCostAmount") {
-    return("Processing Expenditures")
-  } else if (personnel_input_values$data == "LitigationCostAmount") {
-    return("Litigation Costs")
-  } else if (personnel_input_values$data == "TotalCostAmount") {
-    return("Total Costs")
+  req(variable())
+  req(section())
+  if (section() %in% names(manual_title_list)) {
+    manual_title_list[[section()]][[variable()]]
   } else {
-    return(NULL) # Return NULL if no match is found
+    return(NULL)  # Return NULL if section not found
   }
 })
 
 renderPlotly({
   plot_single_column(
-    isolate(personnel_filtered_data()),
-    personnel_input_values$data,
-    personnel_input_values$component,
-    personnel_input_values$fy,
+    isolate(filtered_data()),
+    variable(),
+    component(),
+    fy(),
     manual_title = filtered_input_manual_title()
   )
 })
 ```
 
-Backlog
+Budgets
 =====================================
-  
+
 Inputs {.sidebar}
 -----------------------------------
-  
-```{r}
-# define variables for section
-# update the IDs, change the list variable name, 
-# then replace the variables with ctrl + f
-backlog_data_list <- list(
-  agency_id = "BacklogAgency",
-  component_id = "BacklogComponent",
-  fy_id = "BacklogFY",
-  column_id = "BacklogData"
-)
 
-# column select UI. Update the variable name
-backlog_column_select_ui <- selectInput(
-  backlog_data_list$column_id, "Data", 
-  choices = c("Backlogged Requests" = "BackloggedRequestQuantity"), 
-  selected = "BackloggedRequestQuantity")
-
-# create UI. Update the variables
-ui_function(
-  section_agency_id = backlog_data_list$agency_id, 
-  section_component_id = backlog_data_list$component_id, 
-  section_fy_id = backlog_data_list$fy_id, 
-  custom_column_select_ui = backlog_column_select_ui,
-  sidebar_text_list = sidebar_text_list_1,
-  agencies = agencies)
-```
-
-Row {data-height=300}
--------------------------------------
-  
-###
-  
-```{r}
-# Reactive values list to hold the inputs
-# Update the variable name and the variables inside observe({})
-backlog_input_values <- reactiveValues()
-observe({
-  backlog_input_values$agency <- input[[backlog_data_list$agency_id]]
-  backlog_input_values$component <- input[[backlog_data_list$component_id]]
-  backlog_input_values$fy <- input[[backlog_data_list$fy_id]]
-  backlog_input_values$data <- input[[backlog_data_list$column_id]]
-  backlog_input_values$component_input_id <- backlog_data_list$component_id
-})
-
-# Update filtered data variable name
-backlog_filtered_data <- reactive({
-  req(backlog_input_values$agency)
-  master_foia_data[[backlog_input_values$agency]][["BacklogSection"]]
-})
-
-observe({
-  req(backlog_input_values$agency)
-  updateCheckboxGroupInput(
-    session, backlog_input_values$component_input_id, "Component",
-    choices = component_list[[backlog_input_values$agency]],
-    selected = component_list[[backlog_input_values$agency]][c(1,2)]
-  )
-})
-
-renderPlotly({
-  plot_single_column(
-    isolate(backlog_filtered_data()),
-    backlog_input_values$data,
-    backlog_input_values$component,
-    backlog_input_values$fy,
-    manual_title = "Backlogged Requests"
-  )
-})
-```
-
-
-Expedited Processing
-=====================================
-
-Inputs {.sidebar}
--------------------------------------
+<br/>
 
 ```{r}
-# define variables for section
-# update the IDs, change the list variable name, 
-# then replace the variables with ctrl + f
-expedited_data_list <- list(
-  agency_id = "ExpeditedAgency",
-  component_id = "ExpeditedComponent",
-  fy_id = "ExpeditedFY",
-  column_id = "ExpeditedData"
-)
+# Agency selection
+selectInput(
+  "agency_input_b",
+  label="Agency", 
+  choices =  agencies_budget, 
+  selected = "DHS")
 
-# column select UI. Update the variable name
-expedited_column_select_ui <- selectInput(
-  expedited_data_list$column_id, "Data", 
-  choices = c("Requests Granted" = "RequestGrantedQuantity",
-              "Requests Denied" = "RequestDeniedQuantity",
-              "Adjudication Median" = "AdjudicationMedianDaysValue",
-              "Adjudication Avg. Days" = "AdjudicationAverageDaysValue",
-              "Within Ten Days" = "AdjudicationWithinTenDaysQuantity"), 
-  selected = "AdjudicationWithinTenDaysQuantity")
-
-# create UI. Update the variables
-ui_function(
-  section_agency_id = expedited_data_list$agency_id, 
-  section_component_id = expedited_data_list$component_id, 
-  section_fy_id = expedited_data_list$fy_id, 
-  custom_column_select_ui = expedited_column_select_ui,
-  sidebar_text_list = sidebar_text_list_1,
-  agencies = agencies)
-```
-
-Row {data-height=300}
--------------------------------------
-
-###
-
-```{r}
-# Reactive values list to hold the inputs
-# Update the variable name and the variables inside observe({})
-expedited_input_values <- reactiveValues()
-observe({
-  expedited_input_values$agency <- input[[expedited_data_list$agency_id]]
-  expedited_input_values$component <- input[[expedited_data_list$component_id]]
-  expedited_input_values$fy <- input[[expedited_data_list$fy_id]]
-  expedited_input_values$data <- input[[expedited_data_list$column_id]]
-  expedited_input_values$component_input_id <- expedited_data_list$component_id
-})
-
-# Update filtered data variable name
-expedited_filtered_data <- reactive({
-  req(expedited_input_values$agency)
-  master_foia_data[[expedited_input_values$agency]][["ExpeditedProcessingSection"]]
-})
-
-observe({
-  req(expedited_input_values$agency)
-  updateCheckboxGroupInput(
-    session, expedited_input_values$component_input_id, "Component",
-    choices = component_list[[expedited_input_values$agency]],
-    selected = component_list[[expedited_input_values$agency]][c(1,2)]
-  )
-})
-
-# Maps the column name to the plot title
-filtered_input_manual_title_expedited <- reactive({
-  if (expedited_input_values$data == "RequestGrantedQuantity") {
-    return("Adjudication Requests Granted")
-  } else if (expedited_input_values$data == "RequestDeniedQuantity") {
-    return("Adjudication Requests Denied")
-  } else if (expedited_input_values$data == "AdjudicationMedianDaysValue") {
-    return("Median Adjudication (Days)")
-  } else if (expedited_input_values$data == "AdjudicationAverageDaysValue") {
-    return("Average Adjudication (Days)")
-  } else if (expedited_input_values$data == "AdjudicationWithinTenDaysQuantity") {
-    return("Requests Adjudicated Within Ten Days")
-  } else {
-    return(NULL)  # Return NULL if no match is found
-  }
-})
-
-renderPlotly({
-  plot_single_column(
-    isolate(expedited_filtered_data()),
-    expedited_input_values$data,
-    expedited_input_values$component,
-    expedited_input_values$fy,
-    manual_title = filtered_input_manual_title_expedited()
-  )
-})
-```
-
-Processed Requests
-=====================================
-
-Inputs {.sidebar}
--------------------------------------
-
-```{r}
-# define variables for section
-# update the IDs, change the list variable name, 
-# then replace the variables with ctrl + f
-PR_data_list <- list(
-  agency_id = "PRAgency",
-  component_id = "PRComponent",
-  fy_id = "PRFY",
-  column_id = "PRData"
-)
-
-# column select UI. Update the variable name
-PR_column_select_ui <- selectInput(
-  PR_data_list$column_id, "Data", 
-  choices = c("Pending FY Start" = "ProcessingStatisticsPendingAtStartQuantity", 
-              "Pending FY End" = "ProcessingStatisticsPendingAtEndQuantity", 
-              "Requests Received" = "ProcessingStatisticsReceivedQuantity", 
-              "Requests Processed" = "ProcessingStatisticsProcessedQuantity"), 
-  selected = "ProcessingStatisticsPendingAtStartQuantity")
-
-# create UI. Update the variables
-ui_function(
-  section_agency_id = PR_data_list$agency_id, 
-  section_component_id = PR_data_list$component_id, 
-  section_fy_id = PR_data_list$fy_id, 
-  custom_column_select_ui = PR_column_select_ui,
-  sidebar_text_list = sidebar_text_list_1,
-  agencies = agencies)
-```
-
-Row {data-height=300}
--------------------------------------
-
-###
-
-```{r}
-# Reactive values list to hold the inputs
-# Update the variable name and the variables inside observe({})
-pr_input_values <- reactiveValues()
-observe({
-  pr_input_values$agency <- input[[PR_data_list$agency_id]]
-  pr_input_values$component <- input[[PR_data_list$component_id]]
-  pr_input_values$fy <- input[[PR_data_list$fy_id]]
-  pr_input_values$data <- input[[PR_data_list$column_id]]
-  pr_input_values$component_input_id <- PR_data_list$component_id
-})
-
-# Update filtered data variable name
-PR_filtered_data <- reactive({
-  req(pr_input_values$agency)
-  master_foia_data[[pr_input_values$agency]][["ProcessedRequestSection"]]
-})
-
-observe({
-  req(pr_input_values$agency)
-  updateCheckboxGroupInput(
-    session, pr_input_values$component_input_id, "Component",
-    choices = component_list[[pr_input_values$agency]],
-    selected = component_list[[pr_input_values$agency]][c(1,2)]
-  )
-})
-
-# Maps the column name to the plot title
-filtered_input_manual_title_PR <- reactive({
-  if (pr_input_values$data == "ProcessingStatisticsPendingAtStartQuantity") {
-    return("Requests Pending at FY Start")
-  } else if (pr_input_values$data == "ProcessingStatisticsPendingAtEndQuantity") {
-    return("Requests Pending at FY End")
-  } else if (pr_input_values$data == "ProcessingStatisticsReceivedQuantity") {
-    return("Requests Received")
-  } else if (pr_input_values$data == "ProcessingStatisticsProcessedQuantity") {
-    return("Requests Processed")
-  } else {
-    return(NULL)  # Return NULL if no match is found
-  }
-})
-
-renderPlotly({
-  plot_single_column(
-    isolate(PR_filtered_data()),
-    pr_input_values$data,
-    pr_input_values$component,
-    pr_input_values$fy,
-    manual_title = filtered_input_manual_title_PR()
-  )
-})
-```
-
-
-Pending Requests
-=====================================
-
-Inputs {.sidebar}
--------------------------------------
-
-```{r}
-# define variables for section
-# update the IDs, change the list variable name, 
-# then replace the variables with ctrl + f
-pendingR_data_list <- list(
-  agency_id = "PendingRAgency",
-  component_id = "PendingRComponent",
-  fy_id = "PendingRFY",
-  column_id = "PendingRData"
-)
-
-# column select UI. Update the variable name
-pendingR_column_select_ui <- selectInput(
-  pendingR_data_list$column_id, "Statistic", 
-  choices = c("Simple Pending Requests" = "SimplePendingRequestStatistics_PendingRequestQuantity",
-              "Simple Median Days" = "SimplePendingRequestStatistics_PendingRequestMedianDaysValue",
-              "Simple Average Days" ="SimplePendingRequestStatistics_PendingRequestAverageDaysValue",
-              "Complex Pending Requests" = "ComplexPendingRequestStatistics_PendingRequestQuantity",
-              "Complex Median Days" = "ComplexPendingRequestStatistics_PendingRequestMedianDaysValue",
-              "Complex Average Days" = "ComplexPendingRequestStatistics_PendingRequestAverageDaysValue",
-              "Expedited Pending Requests" = "ExpeditedPendingRequestStatistics_PendingRequestQuantity",
-              "Expedited Median Days" = "ExpeditedPendingRequestStatistics_PendingRequestMedianDaysValue",
-              "Expedited Average Days" = "ExpeditedPendingRequestStatistics_PendingRequestAverageDaysValue"), 
-  selected = "Simple Pending Requests")
-
-# create UI. Update the variables
-ui_function(
-  section_agency_id = pendingR_data_list$agency_id, 
-  section_component_id = pendingR_data_list$component_id, 
-  section_fy_id = pendingR_data_list$fy_id, 
-  custom_column_select_ui = pendingR_column_select_ui,
-  sidebar_text_list = sidebar_text_list_1,
-  agencies = agencies)
-```
-
-Row {data-height=300}
--------------------------------------
-
-###
-
-```{r}
-# Reactive values list to hold the inputs
-# Update the variable name and the variables inside observe({})
-pendingR_input_values <- reactiveValues()
-observe({
-  pendingR_input_values$agency <- input[[pendingR_data_list$agency_id]]
-  pendingR_input_values$component <- input[[pendingR_data_list$component_id]]
-  pendingR_input_values$fy <- input[[pendingR_data_list$fy_id]]
-  pendingR_input_values$data <- input[[pendingR_data_list$column_id]]
-  pendingR_input_values$component_input_id <- pendingR_data_list$component_id
-})
-
-# Update filtered data variable name
-pendingR_filtered_data <- reactive({
-  req(pendingR_input_values$agency)
-  master_foia_data[[pendingR_input_values$agency]][["PendingPerfectedRequestsSection"]]
-})
-
-observe({
-  req(pendingR_input_values$agency)
-  updateCheckboxGroupInput(
-    session, pendingR_input_values$component_input_id, "Component",
-    choices = component_list[[pendingR_input_values$agency]],
-    selected = component_list[[pendingR_input_values$agency]][c(1,2)]
-  )
-})
-
-# Maps the column name to the plot title
-filtered_input_manual_title_pendingR <- reactive({
-  if (pendingR_input_values$data == "SimplePendingRequestStatistics_PendingRequestQuantity") {
-    return("Simple Pending Request Quantity")
-  } else if (pendingR_input_values$data == "SimplePendingRequestStatistics_PendingRequestMedianDaysValue") {
-    return("Simple Pending Request Median Days")
-  } else if (pendingR_input_values$data == "SimplePendingRequestStatistics_PendingRequestAverageDaysValue") {
-    return("Simple Pending Request Average Days")
-  } else if (pendingR_input_values$data == "ComplexPendingRequestStatistics_PendingRequestQuantity") {
-    return("Complex Pending Request Quantity")
-  } else if (pendingR_input_values$data == "ComplexPendingRequestStatistics_PendingRequestMedianDaysValue") {
-    return("Complex Pending Request Median Days")
-  } else if (pendingR_input_values$data == "ComplexPendingRequestStatistics_PendingRequestAverageDaysValue") {
-    return("Complex Pending Request Average Days")
-  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatistics_PendingRequestQuantity") {
-    return("Expedited Pending Request Quantity")
-  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatistics_PendingRequestMedianDaysValue") {
-    return("Expedited Pending Request Median Days")
-  } else if (pendingR_input_values$data == "ExpeditedPendingRequestStatistics_PendingRequestAverageDaysValue") {
-    return("Expedited Pending Request Average Days")
-  } else {
-    return(NULL)  # Return NULL if no match is found
-  }
-})
-
-renderPlotly({
-  plot_single_column(
-    isolate(pendingR_filtered_data()),
-    pendingR_input_values$data,
-    pendingR_input_values$component,
-    pendingR_input_values$fy,
-    manual_title = filtered_input_manual_title_pendingR()
-  )
-})
-```
-
-Appeal Disposition
-=====================================
-
-Inputs {.sidebar}
--------------------------------------
-
-```{r}
-# define variables for section
-# update the IDs, change the list variable name, 
-# then replace the variables with ctrl + f
-appealDisp_data_list <- list(
-  agency_id = "appealDispAgency",
-  component_id = "appealDispComponent",
-  fy_id = "appealDispFY",
-  column_id = "appealDispData"
-)
-
-# column select UI. Update the variable name
-appealDisp_column_select_ui <- selectInput(
-  appealDisp_data_list$column_id, "Statistic", 
-  choices = c("Affirmed On Appeal" = "AppealDispositionAffirmedQuantity",
-              "Partially Affirmed On Appeal" = "AppealDispositionPartialQuantity",
-              "Reversed On Appeal" = "AppealDispositionReversedQuantity",
-              "Appeal Closed - Other" = "AppealDispositionOtherQuantity",
-              "Number of Appeals" = "AppealDispositionTotalQuantity"), 
-  selected = "AppealDispositionTotalQuantity")
-
-# create UI. Update the variables
-ui_function(
-  section_agency_id = appealDisp_data_list$agency_id, 
-  section_component_id = appealDisp_data_list$component_id, 
-  section_fy_id = appealDisp_data_list$fy_id, 
-  custom_column_select_ui = appealDisp_column_select_ui,
-  sidebar_text_list = sidebar_text_list_1,
-  agencies = c("DHS", "DOJ", "DOS", "DOL"))
-```
-
-Row {data-height=300}
--------------------------------------
-
-###
-
-```{r}
-# Reactive values list to hold the inputs
-# Update the variable name and the variables inside observe({})
-appealDisp_input_values <- reactiveValues()
-observe({
-  appealDisp_input_values$agency <- input[[appealDisp_data_list$agency_id]]
-  appealDisp_input_values$component <- input[[appealDisp_data_list$component_id]]
-  appealDisp_input_values$fy <- input[[appealDisp_data_list$fy_id]]
-  appealDisp_input_values$data <- input[[appealDisp_data_list$column_id]]
-  appealDisp_input_values$component_input_id <- appealDisp_data_list$component_id
-})
-
-# Update filtered data variable name
-appealDisp_filtered_data <- reactive({
-  req(appealDisp_input_values$agency)
-  master_foia_data[[appealDisp_input_values$agency]][["AppealDispositionSection"]]
-})
-
-observe({
-  req(appealDisp_input_values$agency)
-  updateCheckboxGroupInput(
-    session, appealDisp_input_values$component_input_id, "Component",
-    choices = component_list[[appealDisp_input_values$agency]],
-    selected = component_list[[appealDisp_input_values$agency]][c(1,2)]
-  )
-})
-
-filtered_input_manual_title_appeal_dis <- reactive({
-  if (appealDisp_input_values$data == "AppealDispositionAffirmedQuantity") {
-    return("Affirmed on Appeal")
-  } else if (appealDisp_input_values$data == "AppealDispositionPartialQuantity") {
-    return("Partially Affirmed on Appeal")
-  } else if (appealDisp_input_values$data == "AppealDispositionReversedQuantity") {
-    return("Reversed on Appeal")
-  } else if (appealDisp_input_values$data == "AppealDispositionOtherQuantity") {
-    return("Appeals Closed for Other Reasons")
-  } else if (appealDisp_input_values$data == "AppealDispositionTotalQuantity") {
-    return("Number of Appeals")
-  } else {
-    return(NULL)  # Return NULL if no match is found
-  }
-})
-
-renderPlotly({
-  plot_single_column(
-    isolate(appealDisp_filtered_data()),
-    appealDisp_input_values$data,
-    appealDisp_input_values$component,
-    appealDisp_input_values$fy,
-    manual_title = filtered_input_manual_title_appeal_dis()
-  )
-})
-```
-
-Agency Budgets
-=====================================
-
-Inputs {.sidebar}
--------------------------------------
-
-```{r}
-# define variables for section
-# update the IDs, change the list variable name,
-# then replace the variables with ctrl + f
-agencyBudgets_data_list <- list(
-  agency_id = "budgetAgency",
-  component_id = "budgetComponent",
-  fy_id = "budgetFY",
-  column_id = "budget_column_id"
-)
-
-# column select UI. Update the variable name
-agencyBudgets_column_select_ui <- NULL
-
-# provide custom ui for component selection
-agencyBudgets_component_select_ui <- selectInput(
-  agencyBudgets_data_list$component_id,
-  "Component",
+# component selection
+selectInput(
+  "component_input_b",
+  label="Component",
   choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"), 
-  selected = "CBP"
-)
+  selected = c("CBP", "PRIV"))
 
-# create UI. Update the variables
-ui_function(
-  section_agency_id = agencyBudgets_data_list$agency_id,
-  section_component_id = agencyBudgets_data_list$component_id,
-  section_fy_id = agencyBudgets_data_list$fy_id,
-  custom_column_select_ui = agencyBudgets_column_select_ui,
-  sidebar_text_list = sidebar_text_list_budgets,
-  agencies = c("DHS", "DOJ", "HHS", "DOS", "DOL"),
-  component_select_ui = agencyBudgets_component_select_ui
-)
+sliderInput(
+  "fy_input_b",
+  "FY", 
+  min = 10, 
+  max = 23, 
+  value = c(10, 23), 
+  step = 1,
+  sep = "")
+
+HTML(
+  "
+  <div style=\"font-size: smaller; word-break: break-word; overflow-wrap: break-word;\">
+    Jacqueline Stevens and Kendall McKay, FOIA Dashboard,
+    <a href=\"https://deportationresearch.shinyapps.io/FOIAdashboard/\">https://deportationresearch.shinyapps.io/FOIAdashboard/</a>
+    <br><br>
+    Copyright:
+    <a href=\"https://creativecommons.org/licenses/by-nc/4.0/\">CC BY-NC</a>
+  </div>
+  ")
 ```
 
 Row {data-height=400}
 -------------------------------------
 
-###
+### Budget Metrics
 
-```{r}
-# Reactive values list to hold the inputs
-# Update the variable name and the variables inside observe({})
-agencyBudget_input_values <- reactiveValues()
-
-observe({
-  agencyBudget_input_values$agency <- input[[agencyBudgets_data_list$agency_id]]
-  agencyBudget_input_values$component <- input[[agencyBudgets_data_list$component_id]]
-  agencyBudget_input_values$fy <- input[[agencyBudgets_data_list$fy_id]]
-  agencyBudget_input_values$data <- input[[agencyBudgets_data_list$column_id]]
-  agencyBudget_input_values$component_input_id <- agencyBudgets_data_list$component_id
+```{r, results='asis'}
+agency_b <- reactive({
+  input$agency_input_b
+})
+component_b <- reactive({
+  input$component_input_b
+})
+fy_b <- reactive({
+  input$fy_input_b[1]:input$fy_input_b[2]
 })
 
-# update component selection
+# Update filtered data variable name
+filtered_data_b <- reactive({
+  req(agency_b())
+  master_budget_data[[agency_b()]]
+})
+
+# update component selection based on selected agency
 observe({
-  req(agencyBudget_input_values$agency)
+  req(agency_b())
   updateSelectInput(
-    session, agencyBudget_input_values$component_input_id, "Component",
-    choices = component_list[[agencyBudget_input_values$agency]],
-    selected = component_list[[agencyBudget_input_values$agency]][1]
+    session, "component_input_b", "Component",
+    choices = component_list[[agency_b()]],
+    selected = component_list[[agency_b()]][1]
   )
 })
 
-# update filtered data variable name
-filtered_data_budget <- reactive({
-  req(agencyBudget_input_values$agency)
-  # load_budget_data(
-  #   agencyBudget_input_values$agency,
-  #   data_dir = csv_dir
-  # )
-  master_budget_data[[agencyBudget_input_values$agency]]
-})
-
-filtered_input_budget <- reactive({
-  component <- agencyBudget_input_values$component
+# select column name
+filtered_input_b <- reactive({
+  component <- component_b()
   
   if (component == "DoS") {
     component <- "DOS_main"
@@ -720,20 +393,20 @@ filtered_input_budget <- reactive({
 })
 
 agencyBudget_year <- reactive({
-  paste0("20", agencyBudget_input_values$fy)
+  paste0("20", fy_b())
 })
 
 renderPlotly({
   # temporary solution to missing budget column name (some missing underscore)
-  if (!(filtered_input_budget() %in% colnames(filtered_data_budget()))) {
-    plot_colname <- str_replace(filtered_input_budget(), "_", ".")
+  if (!(filtered_input_b() %in% colnames(filtered_data_b()))) {
+    plot_colname <- str_replace(filtered_input_b(), "_", ".")
   } else {
-    plot_colname <- filtered_input_budget()
+    plot_colname <- filtered_input_b()
   }
   
-  if (plot_colname %in% colnames(filtered_data_budget())){
+  if (plot_colname %in% colnames(filtered_data_b())){
     plot_two_columns(
-      filtered_data_budget(),
+      filtered_data_b(),
       plot_colname,
       agencyBudget_year()
     )
@@ -744,98 +417,11 @@ renderPlotly({
 })
 ```
 
-Row {data-height=200}
--------------------------------------
-
-###
+### Budgets vs. Backlogs
 
 ```{r}
-renderTable(filtered_data_budget())
-```
-
-Budgets vs. Backlogs
-=====================================
-
-Inputs {.sidebar}
--------------------------------------
-
-```{r}
-#### NOTE FOR THIS SECTION: CRCL isn't listed in original component list for DHS
-
-# define variables for section
-# update the IDs, change the list variable name, 
-# then replace the variables with ctrl + f
-BB_data_list <- list(
-  agency_id = "BBAgency",
-  component_id = "BBComponent",
-  fy_id = "BBFY",
-  column_id = "BB_column_id"
-)
-
-# column select UI. Update the variable name
-BB_column_select_ui <- NULL
-
-# provide custom ui for component selection
-BB_component_select_ui <- selectInput(
-  BB_data_list$component_id,
-  "Component",
-  choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"), 
-  selected = "CBP"
-)
-
-# create UI. Update the variables
-ui_function(
-  section_agency_id = BB_data_list$agency_id, 
-  section_component_id = BB_data_list$component_id, 
-  section_fy_id = BB_data_list$fy_id, 
-  custom_column_select_ui = BB_column_select_ui,
-  sidebar_text_list = sidebar_text_list_1,
-  agencies = c("DHS", "DOJ", "HHS", "DOS", "DOL"),
-  component_select_ui = BB_component_select_ui
-)
-```
-
-Row {data-height=300}
--------------------------------------
-
-###
-
-```{r}
-# Reactive values list to hold the inputs
-# Update the variable name and the variables inside observe({})
-BB_input_values <- reactiveValues()
-
-observe({
-  BB_input_values$agency <- input[[BB_data_list$agency_id]]
-  BB_input_values$component <- input[[BB_data_list$component_id]]
-  BB_input_values$fy <- input[[BB_data_list$fy_id]]
-  BB_input_values$data <- input[[BB_data_list$column_id]]
-  BB_input_values$component_input_id <- BB_data_list$component_id
-})
-
-# Update filtered data variable name
-filtered_data_budget_compare <- reactive({
-  req(BB_input_values$agency)
-  # load_ratios_data(
-  #   BB_input_values$agency,
-  #   data_dir = csv_dir
-  # )
-  master_budget_data[[BB_input_values$agency]]
-})
-
-# update component selection
-observe({
-  req(BB_input_values$agency)
-  updateSelectInput(
-    session, BB_input_values$component_input_id, "Component",
-    choices = component_list[[BB_input_values$agency]],
-    selected = component_list[[BB_input_values$agency]][1]
-  )
-})
-
-# column name
-filtered_input_budget_compare <- reactive({
-  component <- BB_input_values$component
+filtered_input_b_ratio <- reactive({
+  component <- component_b()
   
   if (component == "DoS") {
     component <- "DOS_main"
@@ -845,40 +431,8 @@ filtered_input_budget_compare <- reactive({
   return(column_to_plot)
 })
 
-BB_year <- reactive({
-  paste0("20", BB_input_values$fy)
-})
-
-renderPlotly({
-  # temporary solution to missing budget column name (some missing underscore)
-  if (!(filtered_input_budget_compare() %in% colnames(filtered_data_budget_compare()))) {
-    plot_colname_budget_compare <- str_replace(filtered_input_budget_compare(), "_", ".")
-  } else {
-    plot_colname_budget_compare <- filtered_input_budget_compare()
-  }
-  
-  if (plot_colname_budget_compare %in% colnames(filtered_data_budget_compare())){
-    plot_single_column_budget(
-      filtered_data_budget_compare(),
-      plot_colname_budget_compare,
-      BB_year()
-    )
-  } else {
-    warning(str_glue("Column {plot_colname_budget_compare} not found in dataset."))
-    return(NULL)
-  }
-})
-```
-
-
-Row {data-height=300}
--------------------------------------
-###
-
-```{r}
-# column name
-filtered_input_budget_compare_backlog <- reactive({
-  component <- BB_input_values$component
+filtered_input_b_backlog <- reactive({
+  component <- component_b()
   
   if (component == "DoS") {
     component <- "DOS_main"
@@ -889,24 +443,58 @@ filtered_input_budget_compare_backlog <- reactive({
 })
 
 renderPlotly({
-  # temporary solution to missing budget column name (some missing underscore)
-  if (!(filtered_input_budget_compare_backlog() %in% colnames(filtered_data_budget_compare()))) {
-    plot_colname_budget_compare_backlog <- str_replace(filtered_input_budget_compare_backlog(), "_", ".")
+  
+  print(filtered_input_b_ratio())
+  
+  if (filtered_input_b_ratio() %in% colnames(filtered_data_b())){
+    print("BYE")
+    p1 <- plot_single_column_budget(
+      filtered_data_b(),
+      filtered_input_b_ratio(),
+      agencyBudget_year())
+    if (is.null(p1)) {
+      p1 <- (ggplot() + geom_blank() + 
+        ggtitle("No data available for this agency/component.")) %>%
+        ggplotly()
+    }
   } else {
-    plot_colname_budget_compare_backlog <- filtered_input_budget_compare_backlog()
+    warning(str_glue("Column {filtered_input_b_ratio()} not found in dataset."))
+    print("Hello")
+    p1 <- (ggplot() + geom_blank() + 
+      ggtitle("No data available for this agency/component.")) %>%
+      ggplotly()
   }
   
-  if (plot_colname_budget_compare_backlog %in% colnames(filtered_data_budget_compare())){
-    plot_single_column_backlog(
-      filtered_data_budget_compare(), 
-      plot_colname_budget_compare_backlog,
-      BB_year()
-    )
+  if (filtered_input_b_backlog() %in% colnames(filtered_data_b())){
+    p2 <- plot_single_column_backlog(
+      filtered_data_b(),
+      filtered_input_b_backlog(),
+      agencyBudget_year())
+    if (is.null(p2)) {
+      p2 <- (ggplot() + geom_blank() + 
+        ggtitle("No data available for this agency/component.")) %>%
+        ggplotly()
+    }
   } else {
-    warning(str_glue("Column {plot_colname_budget_compare_backlog} not found in dataset."))
-    return(NULL)
+    warning(str_glue("Column {filtered_input_b_backlog()} not found in dataset."))
+    p2 <- (ggplot() + geom_blank() + 
+      ggtitle("No data available for this agency/component.")) %>% 
+      ggplotly()
   }
+  
+  subplot(p1, p2, nrows = 2, shareX = TRUE, shareY = FALSE, titleY = TRUE) %>%
+    layout(title = "Budgets Ratio vs. Backlogged Requests")
 })
+```
+
+
+Row {data-height=200}
+-------------------------------------
+
+###
+
+```{r}
+renderTable(filtered_data_b())
 ```
 
 ABOUT
@@ -915,8 +503,6 @@ ABOUT
 Inputs {.sidebar}
 -------------------------------------
 
-<br>
-<br>
 <br>
 
 The [Deportation Research Clinic's](https://deportation-research.buffett.northwestern.edu/) dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. Access the Annual Reports [here](https://www.justice.gov/oip/reports-1). The dashboard's tabs reflect several of the categories of the Annual Reports. 
