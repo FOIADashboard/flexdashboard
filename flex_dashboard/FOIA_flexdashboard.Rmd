@@ -12,6 +12,16 @@ output:
 ---
 
 ```{r global}
+# check if necessary packages exist
+all_packages <- c("flexdashboard", "shiny", "knitr", "kableExtra",
+                   "dplyr", "ggplot2", "plotly", "tidyr",
+                   "stringr", "readr", "scales")
+for (p in all_packages) {
+  if (!(p %in% installed.packages()[,"Package"])) {
+    install.packages(p)
+  }
+}
+
 library(flexdashboard)
 library(shiny)
 library(knitr)
