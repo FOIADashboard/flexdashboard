@@ -1,3 +1,11 @@
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+library(scales)
+
 load_foia <- function(input_data, possible_agencies, section_name, data_dir = ".", ppr=FALSE) {
   if (!(input_data %in% possible_agencies)) {
     stop("Invalid agency selected")
@@ -104,20 +112,16 @@ plot_single_column <- function(data, column_name, selected_components, selected_
   return(ggplotly(plot, tooltip = "text")) #removing the auto-generated tooltip and opting for above
 }
 
-
-
-plot_two_columns <- function(data, selected_columns, selected_years, debug = FALSE) {
+plot_budget_metrics <- function(data, selected_columns, selected_years, debug = FALSE) {
   if (debug) {
     print(head(data))
     print(selected_columns)
     print(selected_years)
   }
   
-  selected_columns_expr <- rlang::syms(selected_columns)
-  
   plot_data <- data %>%
     filter(Year %in% selected_years) %>%
-    select(Year, !!!selected_columns_expr) %>%
+    select(Year, all_of(selected_columns)) %>%
     pivot_longer(cols = -Year, names_to = "Metric", values_to = "Value")
   
   plot_data$Value <- as.numeric(gsub(",", "", plot_data$Value))
@@ -137,7 +141,7 @@ plot_two_columns <- function(data, selected_columns, selected_years, debug = FAL
   return(ggplotly(plot))
 }
 
-plot_single_column_budget <- function(data, column_to_plot, selected_years) {
+plot_budget_ratio <- function(data, column_to_plot, selected_years) {
   
   all_missing <- all(is.na(data[[column_to_plot]]))
   if (all_missing) {
@@ -149,10 +153,14 @@ plot_single_column_budget <- function(data, column_to_plot, selected_years) {
     select(Year, all_of(column_to_plot)) %>%
     pivot_longer(cols = -Year, names_to = "Metric", values_to = "Value")
   
+  # remove rows with missing values
   plot_data <- na.omit(plot_data)
   
   # Convert values to percentages
   plot_data$Value <- plot_data$Value * 100
+  
+  # Convert years to numeric
+  selected_years <- as.numeric(selected_years)
   
   # Create a line plot using ggplot2
   plot <- ggplot(plot_data, aes(x = Year, y = Value, color = Metric, group = Metric)) +
@@ -162,12 +170,15 @@ plot_single_column_budget <- function(data, column_to_plot, selected_years) {
          y = paste("FOIA/Total Budget (%)"),
          x = "Year") +
     theme_minimal() +
-    theme(legend.position = "top")
+    theme(legend.position = "top") +
+    scale_x_continuous(
+      breaks = breaks_pretty(),
+      limits = c(min(selected_years), max(selected_years)))
   
   return(ggplotly(plot))
 }
 
-plot_single_column_backlog <- function(data, column_to_plot_backlog, selected_years) {
+plot_backlog <- function(data, column_to_plot_backlog, selected_years) {
   
   all_missing <- all(is.na(data[[column_to_plot_backlog]]))
   if (all_missing) {
@@ -179,7 +190,11 @@ plot_single_column_backlog <- function(data, column_to_plot_backlog, selected_ye
     select(Year, all_of(column_to_plot_backlog)) %>%
     pivot_longer(cols = -Year, names_to = "Metric", values_to = "Value")
   
+  # remove rows with missing values
   plot_data <- na.omit(plot_data)
+  
+  # Convert years to numeric
+  selected_years <- as.numeric(selected_years)
   
   # Create a line plot using ggplot2
   plot <- ggplot(plot_data, aes(x = Year, y = Value, color = Metric, group = Metric)) +
@@ -189,7 +204,10 @@ plot_single_column_backlog <- function(data, column_to_plot_backlog, selected_ye
          y = paste("Backlogged Requests"),
          x = "Year") +
     theme_minimal() +
-    theme(legend.position = "top")
+    theme(legend.position = "top") +
+    scale_x_continuous(
+      breaks = breaks_pretty(),
+      limits = c(min(selected_years), max(selected_years)))
   
   return(ggplotly(plot))
 }

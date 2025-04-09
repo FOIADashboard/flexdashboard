@@ -218,23 +218,8 @@ HTML(
   ")
 ```
 
-Row {.tabset}
+Row
 -------------------------------------
-
-### Usage Guide
-
-The dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. 
-The sources for the department and component annual budgets data are available <a href="https://www.justice.gov/oip/reports-1">here</a>.
-
-Please select sections, data type, component agency(s), and fiscal year(s) using the sidebar.
-
-For more information about the FOIA, see <a href="https://www.foia.gov">foia.gov</a>.
-
-Created by <a href="https://deportation-research.buffett.northwestern.edu/people/">Kendall McKay</a> for the <a href="https://deportation-research.buffett.northwestern.edu">Deportation Research Clinic</a>.
-
-Project support provided by <a href="https://faculty.wcas.northwestern.edu/aaron-geller/">Aaron Geller</a> and <a href="https://www.linkedin.com/in/patrick-zacher/">Patrick Zacher</a> of Northwestern University's <a href="https://www.it.northwestern.edu/departments/it-services-support/research/">IT Research Computing and Data Services (RCDS)</a>.
-
-Funding provided by the Northwestern University <a href="https://www.ipr.northwestern.edu">Institute for Policy Research (IPR)</a>.
 
 ### Plot
 
@@ -294,13 +279,16 @@ filtered_input_manual_title <- reactive({
 })
 
 renderPlotly({
-  plot_single_column(
-    isolate(filtered_data()),
-    variable(),
-    component(),
-    fy(),
-    manual_title = filtered_input_manual_title()
-  )
+  if ((variable() %in% colnames(filtered_data())) &
+      (any(component() %in% filtered_data()$OrganizationAbbreviationText))) {
+    plot_single_column(
+      isolate(filtered_data()),
+      variable(),
+      component(),
+      fy(),
+      manual_title = filtered_input_manual_title()
+    )
+  }
 })
 ```
 
@@ -405,7 +393,7 @@ renderPlotly({
   }
   
   if (plot_colname %in% colnames(filtered_data_b())){
-    plot_two_columns(
+    plot_budget_metrics(
       filtered_data_b(),
       plot_colname,
       agencyBudget_year()
@@ -447,8 +435,7 @@ renderPlotly({
   print(filtered_input_b_ratio())
   
   if (filtered_input_b_ratio() %in% colnames(filtered_data_b())){
-    print("BYE")
-    p1 <- plot_single_column_budget(
+    p1 <- plot_budget_ratio(
       filtered_data_b(),
       filtered_input_b_ratio(),
       agencyBudget_year())
@@ -459,14 +446,13 @@ renderPlotly({
     }
   } else {
     warning(str_glue("Column {filtered_input_b_ratio()} not found in dataset."))
-    print("Hello")
     p1 <- (ggplot() + geom_blank() + 
       ggtitle("No data available for this agency/component.")) %>%
       ggplotly()
   }
   
   if (filtered_input_b_backlog() %in% colnames(filtered_data_b())){
-    p2 <- plot_single_column_backlog(
+    p2 <- plot_backlog(
       filtered_data_b(),
       filtered_input_b_backlog(),
       agencyBudget_year())
@@ -512,9 +498,23 @@ For more information about the FOIA, see [foia.gov](https://www.foia.gov).
 
 Row {data-height=300}
 -------------------------------------
+
 ###
-<br>
-<br>
+
+*USAGE GUIDE*
+
+The dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. 
+The sources for the department and component annual budgets data are available <a href="https://www.justice.gov/oip/reports-1">here</a>.
+
+Please select sections, data type, component agency(s), and fiscal year(s) using the sidebar.
+
+For more information about the FOIA, see <a href="https://www.foia.gov">foia.gov</a>.
+
+Created by <a href="https://deportation-research.buffett.northwestern.edu/people/">Kendall McKay</a> for the <a href="https://deportation-research.buffett.northwestern.edu">Deportation Research Clinic</a>.
+
+Project support provided by <a href="https://faculty.wcas.northwestern.edu/aaron-geller/">Aaron Geller</a> and <a href="https://www.linkedin.com/in/patrick-zacher/">Patrick Zacher</a> of Northwestern University's <a href="https://www.it.northwestern.edu/departments/it-services-support/research/">IT Research Computing and Data Services (RCDS)</a>.
+
+Funding provided by the Northwestern University <a href="https://www.ipr.northwestern.edu">Institute for Policy Research (IPR)</a>.
 
 *ACKNOWLEDGEMENTS*
 
