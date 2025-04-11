@@ -22,31 +22,22 @@ load_all_agencies <- function(agency_list, data_dir = ".") {
 
 load_budget_data <- function(input_data, data_dir = ".") {
   filenames <- c(
-    "DHS" = "Homeland_budgets.csv",
-    "DOL" = "Labor_budgets.csv",
-    "DOJ" = "Justice_budgets.csv",
-    "DOS" = "State_budgets.csv",
-    "HHS" = "Human_services_budgets.csv",
-    "HUD" = "Urban_budgets.csv",
-    "DOD" = "Defense_budgets.csv",
-    "VA" = "Veterans_budgets.csv",
-    "Treasury" = "Treasury_budgets.csv",
-    "Education" = "Education_budgets.csv",
-    "Energy" = "Energy_budgets.csv",
-    "Commerce" = "Commerce_budgets.csv",
-    "Agriculture" = "Agriculture_budgets.csv",
-    "Interior" = "Interior_budgets.csv"
+    "DHS" = "DHS_budget_ratio.csv",
+    "DOL" = "DOL_budget_ratio.csv",
+    "DOJ" = "DOJ_budget_ratio.csv",
+    "DOS" = "DOS_budget_ratio.csv",
+    "HHS" = "HHS_budget_ratio.csv"
   )
   return(read.csv(file.path(data_dir, filenames[input_data])))
 }
 
 load_ratios_data <- function(input_data, data_dir = ".") {
   filenames <- c(
-    "DHS" = "Homeland_ratios.csv",
-    "DOL" = "Labor_ratios.csv",
-    "DOJ" = "Justice_ratios.csv",
-    "HHS" = "Human_services_ratios.csv",
-    "DOS" = "State_ratios.csv"
+    "DHS" = "DHS_budget_ratio.csv",
+    "DOL" = "DOL_budget_ratio.csv",
+    "DOJ" = "DOJ_budget_ratio.csv",
+    "DOS" = "DOS_budget_ratio.csv",
+    "HHS" = "HHS_budget_ratio.csv"
   )
   return(read.csv(file.path(data_dir, filenames[input_data])))
 }
