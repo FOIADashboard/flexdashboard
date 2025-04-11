@@ -442,8 +442,6 @@ filtered_input_b_backlog <- reactive({
 
 renderPlotly({
   
-  print(filtered_input_b_ratio())
-  
   if (filtered_input_b_ratio() %in% colnames(filtered_data_b())){
     p1 <- plot_budget_ratio(
       filtered_data_b(),
