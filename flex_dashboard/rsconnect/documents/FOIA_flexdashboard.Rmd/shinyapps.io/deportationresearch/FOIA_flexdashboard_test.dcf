@@ -1,0 +1,12 @@
+name: FOIA_flexdashboard_test
+title: FOIA_flexdashboard_test
+username: deportationresearch
+account: deportationresearch
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14529610
+bundleId: 10120329
+url: https://deportationresearch.shinyapps.io/FOIA_flexdashboard_test/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

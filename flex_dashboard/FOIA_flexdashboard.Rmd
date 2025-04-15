@@ -39,7 +39,6 @@ source("functions.R")
 source("ui_functions.R")
 
 # global variables
-rds_dir <- "data/rds"
 csv_dir <- "data/csv"
 agencies <- c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS")
 agencies_budget <- c("DHS", "DOL", "DOJ", "HHS", "DOS")
@@ -55,9 +54,10 @@ component_list <- list(
 )
 
 # load foia data for all agencies
-master_foia_data <- load_all_agencies(agencies, data_dir = rds_dir)
+master_foia_data <- load_foia_data(agencies)
 master_budget_data <- load_all_agencies_budget(
-  c("DHS", "DOL", "DOJ", "HHS", "DOS"), data_dir = csv_dir)
+  c("DHS", "DOL", "DOJ", "HHS", "DOS")
+)
 
 # Possible sections for FOIA data
 # The vector is formmated such that

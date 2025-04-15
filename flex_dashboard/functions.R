@@ -6,56 +6,60 @@ library(ggplot2)
 library(stringr)
 library(scales)
 
-load_foia <- function(input_data, possible_agencies, section_name, data_dir = ".", ppr=FALSE) {
-  if (!(input_data %in% possible_agencies)) {
-    stop("Invalid agency selected")
+create_foia_data <- function(agency_list) {
+  agency_data <- list()
+  
+  if (!dir.exists("./data/rds")) {
+    stop("./data/rds directory does not exist!")
   }
   
-  if (!ppr) {
-    load(file.path(data_dir, str_glue("{input_data}_data.Rda")), envir = .GlobalEnv)
-  } else if (ppr) {
-    load(file.path(data_dir, str_glue("{input_data}_PPR_data.Rda")), envir = .GlobalEnv)
-  }
-  return(foia_data[[section_name]])
-}
-
-load_all_agencies <- function(agency_list, data_dir = ".") {
-  agency_data <- list()
   for (agency in agency_list) {
-    data_ <- readRDS(file.path(data_dir, str_glue("{agency}_data.rds")))
+    data_ <- readRDS(str_glue("./data/rds/{agency}_data.rds"))
     agency_data[[agency]] <- data_
   }
+  
+  saveRDS(agency_data, file = "foia_data.rds")
+  
   return(agency_data)
 }
 
-load_budget_data <- function(input_data, data_dir = ".") {
-  filenames <- c(
-    "DHS" = "DHS_budget_ratio.csv",
-    "DOL" = "DOL_budget_ratio.csv",
-    "DOJ" = "DOJ_budget_ratio.csv",
-    "DOS" = "DOS_budget_ratio.csv",
-    "HHS" = "HHS_budget_ratio.csv"
-  )
-  return(read.csv(file.path(data_dir, filenames[input_data])))
-}
-
-load_ratios_data <- function(input_data, data_dir = ".") {
-  filenames <- c(
-    "DHS" = "DHS_budget_ratio.csv",
-    "DOL" = "DOL_budget_ratio.csv",
-    "DOJ" = "DOJ_budget_ratio.csv",
-    "DOS" = "DOS_budget_ratio.csv",
-    "HHS" = "HHS_budget_ratio.csv"
-  )
-  return(read.csv(file.path(data_dir, filenames[input_data])))
-}
-
-load_all_agencies_budget <- function(agency_list, data_dir = ".") {
-  budget_data <- list()
-  for (agency in agency_list) {
-    data_ <- readr::read_csv(file.path(data_dir, str_glue("{agency}_budget_ratio.csv")))
-    budget_data[[agency]] <- data_
+load_foia_data <- function(agency_list=NULL) {
+  foia_data_filename <- "foia_data.rds"
+  
+  if (!file.exists(foia_data_filename)) {
+    foia_data <- create_foia_data(agency_list)
+  } else {
+    foia_data <- readRDS(foia_data_filename)
   }
+
+  return(foia_data)
+}
+
+create_budget_data <- function(agency_list) {
+  budget_data <- list()
+  
+  if (!dir.exists("./data/csv")) {
+    stop("./data/csv directory does not exist!")
+  }
+  
+  for (agency in agency_list) {
+    budget_data[[agency]] <- readr::read_csv(str_glue("./data/csv/{agency}_budget_ratio.csv"))
+  }
+
+  saveRDS(budget_data, file = "budget_data.rds")
+  
+  return(budget_data)
+}
+
+load_all_agencies_budget <- function(agency_list=NULL) {
+  budget_data_filename <- "budget_data.rds"
+  
+  if (!file.exists(budget_data_filename)) {
+    budget_data <- create_budget_data(agency_list)
+  } else {
+    budget_data <- readRDS(budget_data_filename)
+  }
+  
   return(budget_data)
 }
 
