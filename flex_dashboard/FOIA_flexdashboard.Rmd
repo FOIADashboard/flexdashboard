@@ -13,9 +13,10 @@ output:
 
 ```{r global}
 # check if necessary packages exist
+# if a package doesn't exist, install the package
 all_packages <- c("flexdashboard", "shiny", "knitr", "kableExtra",
                    "dplyr", "ggplot2", "plotly", "tidyr",
-                   "stringr", "readr", "scales")
+                   "stringr", "readr", "scales", "purrr")
 for (p in all_packages) {
   if (!(p %in% installed.packages()[,"Package"])) {
     install.packages(p)
@@ -33,15 +34,28 @@ library(tidyr)
 library(ggplot2)
 library(stringr)
 library(readr)
+library(purrr)
 
 # load functions used in script
 source("functions.R")
 source("ui_functions.R")
 
-# global variables
-csv_dir <- "data/csv"
-agencies <- c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS")
+# dashboard variable setup ------------------------------------ 
+
+# agencies with extracted FOIA data. To extract data, use 
+# the FOIA data extraction tool:
+# https://github.com/rcds-dssv/foia_data_mining
+# After extraction, move the resulting .rds file to data/rds.
+# The .rds file should be saved as {agency}_data.rds
+agencies <- c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS", "DOI",
+              "GSA", "SEC", "VA")
+
+# Agencies with budget data. Each .csv file should
+# represent an agency. The .csv files are saved in data/csv.
+# the .csv should be saved as {agency}_budget_ratio.csv
 agencies_budget <- c("DHS", "DOL", "DOJ", "HHS", "DOS")
+
+# A list of components for each agency. 
 component_list <- list(
   "DHS" = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"),
   "EPA" = c("HQ", "Region 1", "Region 2", "Region 3",
@@ -50,14 +64,13 @@ component_list <- list(
   "DOL" = c("OSHA", "WHD", "OSEC", "OIG"),
   "DOJ" = c("EOIR", "OIG"),
   "HHS" = c("CDC", "ACF", "OIG"),
-  "DOS" = c("OIG", "DoS")
+  "DOS" = c("OIG", "DoS"),
+  "DOI" = c("BIA", "BLM", "BOEM", "BOR", "BSEE", 
+            "FWS", "USGS", "NPS", "OIG", "OS", "SOL",
+            "BIE", "FPAO", "DFO", "OSMRE", "AS-IA")
 )
 
-# load foia data for all agencies
-master_foia_data <- load_foia_data(agencies)
-master_budget_data <- load_all_agencies_budget(
-  c("DHS", "DOL", "DOJ", "HHS", "DOS")
-)
+# UI, data selection, plot output configuration ----------------------------
 
 # Possible sections for FOIA data
 # The vector is formmated such that
@@ -161,7 +174,21 @@ manual_title_list <- list(
 # UI and Server code template is available in tab_template.R file.
 ```
 
-Section Explorer
+```{r}
+# load foia data for all agencies
+master_foia_data <- load_foia_data(agencies)
+master_budget_data <- load_all_agencies_budget(agencies_budget)
+
+# get all available components for agency if it was not specified in component_list
+for (agency in agencies) {
+  if (!(agency %in% names(component_list))) {
+    component_list[[agency]] <- extract_agency_components(master_foia_data[[agency]])
+  }
+}
+
+```
+
+FOIA Metrics
 =====================================
 
 Inputs {.sidebar}
@@ -198,15 +225,6 @@ checkboxGroupInput(
   selected = c("CBP", "PRIV"))
 
 # Fiscal Year selection
-# checkboxGroupInput(
-#   "fy_input",
-#   "FY", 
-#   choices = c("10", "11", "12", "13", "14", "15", 
-#               "16", "17", "18", "19", "20", "21", 
-#               "22","23"), 
-#   selected = c("10", "11", "12", "13", "14", "15", 
-#               "16", "17", "18"))
-
 sliderInput(
   "fy_input",
   "FY", 

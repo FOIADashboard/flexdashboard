@@ -5,6 +5,7 @@ library(tidyr)
 library(ggplot2)
 library(stringr)
 library(scales)
+library(purrr)
 
 create_foia_data <- function(agency_list) {
   agency_data <- list()
@@ -23,13 +24,26 @@ create_foia_data <- function(agency_list) {
   return(agency_data)
 }
 
+extract_agency_components <- function(foia_data) {
+  foia_data %>% 
+    map(~ unique(.x$OrganizationAbbreviationText)) %>%
+    flatten_chr() %>% 
+    unique() %>%
+    sort()
+}
+
 load_foia_data <- function(agency_list=NULL) {
   foia_data_filename <- "foia_data.rds"
   
   if (!file.exists(foia_data_filename)) {
+    # save foia data object if it doesn't exist
     foia_data <- create_foia_data(agency_list)
   } else {
     foia_data <- readRDS(foia_data_filename)
+    # check that the foia data object is up to date
+    if (!all(agency_list %in% names(foia_data))) {
+      foia_data <- create_foia_data(agency_list)
+    }
   }
 
   return(foia_data)
