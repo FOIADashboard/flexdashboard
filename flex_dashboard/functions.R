@@ -35,7 +35,7 @@ extract_agency_components <- function(foia_data) {
 load_foia_data <- function(agency_list=NULL) {
   foia_data_filename <- "foia_data.rds"
   
-  if (!file.exists(foia_data_filename)) {
+  if ((!file.exists(foia_data_filename)) | dir.exists("data/rds/")) {
     # save foia data object if it doesn't exist
     foia_data <- create_foia_data(agency_list)
   } else {
@@ -68,7 +68,7 @@ create_budget_data <- function(agency_list) {
 load_all_agencies_budget <- function(agency_list=NULL) {
   budget_data_filename <- "budget_data.rds"
   
-  if (!file.exists(budget_data_filename)) {
+  if ((!file.exists(budget_data_filename)) | dir.exists("data/csv/")) {
     budget_data <- create_budget_data(agency_list)
   } else {
     budget_data <- readRDS(budget_data_filename)

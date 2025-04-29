@@ -57,17 +57,15 @@ agencies_budget <- c("DHS", "DOL", "DOJ", "HHS", "DOS")
 
 # A list of components for each agency. 
 component_list <- list(
-  "DHS" = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"),
+  "DHS" = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL", "FPS",
+            "FEMA", "FLETC", "I&A", "TSA", "USCG", "USSS"),
   "EPA" = c("HQ", "Region 1", "Region 2", "Region 3",
             "Region 4", "Region 5", "Region 6", "Region 7",
             "Region 8", "Region 9", "Region 10"),
-  "DOL" = c("OSHA", "WHD", "OSEC", "OIG"),
-  "DOJ" = c("EOIR", "OIG"),
-  "HHS" = c("CDC", "ACF", "OIG"),
-  "DOS" = c("OIG", "DoS"),
-  "DOI" = c("BIA", "BLM", "BOEM", "BOR", "BSEE", 
-            "FWS", "USGS", "NPS", "OIG", "OS", "SOL",
-            "BIE", "FPAO", "DFO", "OSMRE", "AS-IA")
+  "DOL" = c("OSHA", "WHD", "OSEC", "OIG", "SOL", "OPA", "OCIA", "ETA", "OASP"),
+  "DOJ" = c("EOIR", "OIG", "BOP", "DEA", "Civil Rights", "FBI", "OIP"),
+  "HHS" = c("CDC", "ACF", "OIG", "CMS", "FDA", "NIH", "OS"),
+  "DOS" = c("OIG", "DoS")
 )
 
 # UI, data selection, plot output configuration ----------------------------
@@ -221,8 +219,8 @@ selectInput(
 checkboxGroupInput(
   "component_input",
   "Component",
-  choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"), 
-  selected = c("CBP", "PRIV"))
+  choices = component_list[["DHS"]], 
+  selected = component_list[["DHS"]][c(1,2)])
 
 # Fiscal Year selection
 sliderInput(
@@ -340,8 +338,8 @@ selectInput(
 selectInput(
   "component_input_b",
   label="Component",
-  choices = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL"), 
-  selected = c("CBP", "PRIV"))
+  choices = component_list[["DHS"]], 
+  selected = component_list[["DHS"]][c(1,2)])
 
 sliderInput(
   "fy_input_b",
