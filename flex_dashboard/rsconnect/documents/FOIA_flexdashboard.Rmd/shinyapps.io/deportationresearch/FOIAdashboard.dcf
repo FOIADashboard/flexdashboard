@@ -1,12 +1,12 @@
-name: FOIA_flexdashboard
-title: FOIA_flexdashboard
+name: FOIAdashboard
+title: FOIAdashboard
 username: deportationresearch
 account: deportationresearch
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 14592952
-bundleId: 10165243
-url: https://deportationresearch.shinyapps.io/FOIA_flexdashboard/
+appId: 11723952
+bundleId: 10257895
+url: https://deportationresearch.shinyapps.io/FOIAdashboard/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE

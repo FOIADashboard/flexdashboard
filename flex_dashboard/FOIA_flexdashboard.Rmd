@@ -286,10 +286,11 @@ observe({
 # update component selection based on selected agency
 observe({
   req(agency())
+  comp_preselected_ <- if (length(component_list[[agency()]]) > 1) c(1,2) else 1
   updateCheckboxGroupInput(
     session, "component_input", "Component",
     choices = component_list[[agency()]],
-    selected = component_list[[agency()]][c(1,2)]
+    selected = component_list[[agency()]][comp_preselected_]
   )
 })
 
