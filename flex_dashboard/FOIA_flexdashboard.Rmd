@@ -347,6 +347,23 @@ radioButtons(
   choices = c("Budget", "Budget vs Backlog"),
   selected = "Budget")
 
+sliderInput(
+  "fy_input_b",
+  "FY", 
+  min = 10, 
+  max = 23, 
+  value = c(10, 23), 
+  step = 1,
+  sep = "")
+
+# action button to view full budget data
+actionButton(
+  "view_datatable_input_b",
+  label = "View Full Budget Data"
+)
+br()
+br()
+
 HTML(
   "
   <div style=\"font-size: smaller; word-break: break-word; overflow-wrap: break-word;\">
