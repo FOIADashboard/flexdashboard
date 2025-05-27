@@ -107,6 +107,11 @@ plot_single_column <- function(data, column_name, selected_components, selected_
   
   plot_data <- na.omit(plot_data)
   
+  # plot no data plot if no remaining data
+  if (nrow(plot_data) == 0) {
+    return(plot_no_data())
+  }
+  
   plot <- ggplot(plot_data, aes(x = FY, y = !!sym(column_name), color = OrganizationAbbreviationText, group = OrganizationAbbreviationText)) +
     geom_line(aes(text = paste("FY:", FY, "<br>", y_lab, ":", !!sym(column_name), "<br>Component:", OrganizationAbbreviationText))) +
     geom_point(aes(text = paste("FY:", FY, "<br>", y_lab, ":", !!sym(column_name), "<br>Component:", OrganizationAbbreviationText))) +
@@ -147,7 +152,7 @@ plot_budget_metrics <- function(
     geom_line(show.legend=FALSE) +
     labs(
       title = str_c(
-        "Budget Metrics\n",
+        "Budget Metrics - ",
         "Agency: ", selected_agency,
         ", Component: ", selected_component
       ),
@@ -279,7 +284,7 @@ plot_ratio_v_backlog <- function(
 
 plot_no_data <- function() {
   ggplot() +
-    annotate(label = "No data available for this agency / component", 
+    annotate(label = "Insufficient data for this agency / component", 
              x = 0, y = 0, geom = "text", size = 8) +
     theme_void()
 }

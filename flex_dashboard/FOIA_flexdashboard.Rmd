@@ -248,7 +248,8 @@ Row
 ### Plot
 
 ```{r}
-# capture section selection
+# capture section, agency, component,
+# fiscal year, and variable selection
 section <- reactive({
   input$section_input
 })
@@ -303,6 +304,7 @@ filtered_input_manual_title <- reactive({
   }
 })
 
+# create and display plot
 renderPlotly({
   if ((variable() %in% colnames(filtered_data())) &
       (any(component() %in% filtered_data()$OrganizationAbbreviationText))) {
@@ -359,6 +361,11 @@ sliderInput(
 HTML(
   "
   <div style=\"font-size: smaller; word-break: break-word; overflow-wrap: break-word;\">
+    <span style='font-size: medium; font-weight: bold;'>
+      The sources for the budget data are accessible 
+      <a href=\"https://docs.google.com/spreadsheets/d/1CV6Z_gTZ0KVZ84ChH9lS88vAB-SyuqvRFO_Mavl7NDw/edit?usp=sharing\">here</a>.
+    </span>
+    <br><br>
     Jacqueline Stevens and Kendall McKay, FOIA Dashboard,
     <a href=\"https://deportationresearch.shinyapps.io/FOIAdashboard/\">https://deportationresearch.shinyapps.io/FOIAdashboard/</a>
     <br><br>
@@ -496,6 +503,7 @@ Row {data-height=200}
 ```{r}
 renderTable(filtered_data_b())
 ```
+
 
 ABOUT
 =====================================
