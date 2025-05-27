@@ -51,6 +51,7 @@ sidebar_text_list_budgets <- list(
   )
 )
 
+# not used in the dashboard
 ui_function <- function(
     section_agency_id, 
     section_component_id, 

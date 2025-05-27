@@ -121,7 +121,11 @@ plot_single_column <- function(data, column_name, selected_components, selected_
   return(ggplotly(plot, tooltip = "text")) #removing the auto-generated tooltip and opting for above
 }
 
-plot_budget_metrics <- function(data, selected_columns, selected_years, debug = FALSE) {
+plot_budget_metrics <- function(
+    data, selected_columns, selected_years,
+    selected_agency, selected_component,
+    debug = FALSE) {
+  
   if (debug) {
     print(head(data))
     print(selected_columns)
@@ -140,12 +144,18 @@ plot_budget_metrics <- function(data, selected_columns, selected_years, debug = 
   # Create a line plot using ggplot2
   plot <- ggplot(plot_data, aes(x = Year, y = Value/1e9, color = Metric)) +
     geom_point() +
-    geom_line() +
-    labs(title = "Budget Metrics",
-         y = "Billions of Dollars ($)",
-         x = "Year") +
+    geom_line(show.legend=FALSE) +
+    labs(
+      title = str_c(
+        "Budget Metrics\n",
+        "Agency: ", selected_agency,
+        ", Component: ", selected_component
+      ),
+      y = "Billions of Dollars ($)",
+      x = "Year"
+    ) +
     theme_minimal() +
-    theme(legend.position = "top")
+    theme(legend.position = "none")
   
   return(ggplotly(plot))
 }

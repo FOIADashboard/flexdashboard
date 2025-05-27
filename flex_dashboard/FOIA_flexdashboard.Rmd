@@ -1,5 +1,5 @@
 ---
-title: "FOIA dashboard"
+title: "FOIA Annual Report dashboard"
 runtime: shiny
 output: 
   flexdashboard::flex_dashboard:
@@ -168,11 +168,9 @@ manual_title_list <- list(
     "AppealDispositionOtherQuantity" = "Appeals Closed for Other Reasons",
     "AppealDispositionTotalQuantity" = "Number of Appeals")
 )
-
-# UI and Server code template is available in tab_template.R file.
 ```
 
-```{r}
+```{r setup-foia-data}
 # load foia data for all agencies
 master_foia_data <- load_foia_data(agencies)
 master_budget_data <- load_all_agencies_budget(agencies_budget)
@@ -331,25 +329,23 @@ Inputs {.sidebar}
 # Agency selection
 selectInput(
   "agency_input_b",
-  label="Agency", 
+  label = "Agency", 
   choices =  agencies_budget, 
   selected = "DHS")
 
 # component selection
 selectInput(
   "component_input_b",
-  label="Component",
+  label = "Component",
   choices = component_list[["DHS"]], 
   selected = component_list[["DHS"]][c(1,2)])
 
-sliderInput(
-  "fy_input_b",
-  "FY", 
-  min = 10, 
-  max = 23, 
-  value = c(10, 23), 
-  step = 1,
-  sep = "")
+# Plot selection
+radioButtons(
+  "plot_input_b",
+  label = "Plot",
+  choices = c("Budget", "Budget vs Backlog"),
+  selected = "Budget")
 
 HTML(
   "
@@ -369,6 +365,7 @@ Row {data-height=400}
 ### Budget Metrics
 
 ```{r, results='asis'}
+# capture agency, component, and fiscal year selection
 agency_b <- reactive({
   input$agency_input_b
 })
@@ -407,6 +404,7 @@ filtered_input_b <- reactive({
   return(column_to_plot)
 })
 
+# process the fiscal year to match the budget data format
 agencyBudget_year <- reactive({
   paste0("20", fy_b())
 })
@@ -423,7 +421,9 @@ renderPlotly({
     plot_budget_metrics(
       filtered_data_b(),
       plot_colname,
-      agencyBudget_year()
+      agencyBudget_year(),
+      selected_agency = agency_b(),
+      selected_component = component_b(),
     )
   } else {
     warning(str_glue("Column {plot_colname} not found in dataset."))
