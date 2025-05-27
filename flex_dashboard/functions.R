@@ -160,7 +160,7 @@ plot_budget_metrics <- function(
   return(ggplotly(plot))
 }
 
-plot_budget_ratio <- function(data, column_to_plot, selected_years) {
+plot_budget_ratio <- function(data, column_to_plot, selected_years, line_color = "F8766D") {
   
   all_missing <- all(is.na(data[[column_to_plot]]))
   if (all_missing) {
@@ -192,12 +192,13 @@ plot_budget_ratio <- function(data, column_to_plot, selected_years) {
     theme(legend.position = "top") +
     scale_x_continuous(
       breaks = breaks_pretty(),
-      limits = c(min(selected_years), max(selected_years)))
+      limits = c(min(selected_years), max(selected_years))) +
+    scale_color_manual(values = set_names(line_color, column_to_plot))
   
   return(ggplotly(plot))
 }
 
-plot_backlog <- function(data, column_to_plot_backlog, selected_years) {
+plot_backlog <- function(data, column_to_plot_backlog, selected_years, line_color = "#F8766D") {
   
   all_missing <- all(is.na(data[[column_to_plot_backlog]]))
   if (all_missing) {
@@ -226,11 +227,62 @@ plot_backlog <- function(data, column_to_plot_backlog, selected_years) {
     theme(legend.position = "top") +
     scale_x_continuous(
       breaks = breaks_pretty(),
-      limits = c(min(selected_years), max(selected_years)))
+      limits = c(min(selected_years), max(selected_years))) +
+    scale_color_manual(values = set_names(line_color, column_to_plot_backlog))
   
   return(ggplotly(plot))
 }
 
+plot_ratio_v_backlog <- function(
+    filtered_data_b,
+    filtered_input_b_ratio,
+    filtered_input_b_backlog,
+    agencyBudget_year,
+    line_colors = c("red", "blue")
+) {
+  
+  if (filtered_input_b_ratio %in% colnames(filtered_data_b)){
+    p1 <- plot_budget_ratio(
+      filtered_data_b,
+      filtered_input_b_ratio,
+      agencyBudget_year,
+      line_color = line_colors[1])
+    if (is.null(p1)) {
+      p1 <- plot_no_data() %>%
+        ggplotly()
+    }
+  } else {
+    warning(str_glue("Column {filtered_input_b_ratio} not found in dataset."))
+    p1 <- plot_no_data() %>%
+      ggplotly()
+  }
+  
+  if (filtered_input_b_backlog %in% colnames(filtered_data_b)){
+    p2 <- plot_backlog(
+      filtered_data_b,
+      filtered_input_b_backlog,
+      agencyBudget_year,
+      line_color = line_colors[2])
+    if (is.null(p2)) {
+      p2 <- plot_no_data() %>%
+        ggplotly()
+    }
+  } else {
+    warning(str_glue("Column {filtered_input_b_backlog} not found in dataset."))
+    p2 <- plot_no_data() %>% 
+      ggplotly()
+  }
+  
+  subplot(p1, p2, nrows = 2, shareX = TRUE, shareY = FALSE, titleY = TRUE) %>%
+    layout(title = "Budgets Ratio vs. Backlogged Requests")
+}
+
+plot_no_data <- function() {
+  ggplot() +
+    annotate(label = "No data available for this agency / component", 
+             x = 0, y = 0, geom = "text", size = 8) +
+    theme_void()
+}
 
 plot_stacked_area <- function(data, column_names, selected_components, selected_years) {
   plot_data <- data %>%

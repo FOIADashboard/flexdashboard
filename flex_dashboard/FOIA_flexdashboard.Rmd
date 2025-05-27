@@ -356,14 +356,6 @@ sliderInput(
   step = 1,
   sep = "")
 
-# action button to view full budget data
-actionButton(
-  "view_datatable_input_b",
-  label = "View Full Budget Data"
-)
-br()
-br()
-
 HTML(
   "
   <div style=\"font-size: smaller; word-break: break-word; overflow-wrap: break-word;\">
@@ -379,7 +371,7 @@ HTML(
 Row {data-height=400}
 -------------------------------------
 
-### Budget Metrics
+### Plot - Select Plot Using Sidebar
 
 ```{r, results='asis'}
 # capture agency, component, and fiscal year selection
@@ -393,7 +385,7 @@ fy_b <- reactive({
   input$fy_input_b[1]:input$fy_input_b[2]
 })
 
-# Update filtered data variable name
+# Update filtered data
 filtered_data_b <- reactive({
   req(agency_b())
   master_budget_data[[agency_b()]]
@@ -409,7 +401,7 @@ observe({
   )
 })
 
-# select column name
+# column name processing for budgets
 filtered_input_b <- reactive({
   component <- component_b()
   
@@ -421,12 +413,37 @@ filtered_input_b <- reactive({
   return(column_to_plot)
 })
 
+# column name processing for budgets ratio
+filtered_input_b_ratio <- reactive({
+  component <- component_b()
+  
+  if (component == "DoS") {
+    component <- "DOS_main"
+  }
+  
+  column_to_plot <- paste0(component, "_ratio")
+  return(column_to_plot)
+})
+
+# column name processing for backlog
+filtered_input_b_backlog <- reactive({
+  component <- component_b()
+  
+  if (component == "DoS") {
+    component <- "DOS_main"
+  }
+  
+  column_to_plot <- paste0(component, "_backlog")
+  return(column_to_plot)
+})
+
 # process the fiscal year to match the budget data format
 agencyBudget_year <- reactive({
   paste0("20", fy_b())
 })
 
-renderPlotly({
+# plot for budget plot
+budget_plot <- reactive({
   # temporary solution to missing budget column name (some missing underscore)
   if (!(filtered_input_b() %in% colnames(filtered_data_b()))) {
     plot_colname <- str_replace(filtered_input_b(), "_", ".")
@@ -444,82 +461,37 @@ renderPlotly({
     )
   } else {
     warning(str_glue("Column {plot_colname} not found in dataset."))
-    return(NULL)
+    return(plot_no_data())
   }
 })
-```
 
-### Budgets vs. Backlogs
-
-```{r}
-filtered_input_b_ratio <- reactive({
-  component <- component_b()
-  
-  if (component == "DoS") {
-    component <- "DOS_main"
-  }
-  
-  column_to_plot <- paste0(component, "_ratio")
-  return(column_to_plot)
-})
-
-filtered_input_b_backlog <- reactive({
-  component <- component_b()
-  
-  if (component == "DoS") {
-    component <- "DOS_main"
-  }
-  
-  column_to_plot <- paste0(component, "_backlog")
-  return(column_to_plot)
+# plot for budget vs backlog comparison plot
+budget_v_backlot_plot <- reactive({
+  plot_ratio_v_backlog(
+    filtered_data_b(),
+    filtered_input_b_ratio(),
+    filtered_input_b_backlog(),
+    agencyBudget_year(),
+    line_colors = RColorBrewer::brewer.pal(4, "Dark2")[c(1,2)]
+  )
 })
 
 renderPlotly({
-  
-  if (filtered_input_b_ratio() %in% colnames(filtered_data_b())){
-    p1 <- plot_budget_ratio(
-      filtered_data_b(),
-      filtered_input_b_ratio(),
-      agencyBudget_year())
-    if (is.null(p1)) {
-      p1 <- (ggplot() + geom_blank() + 
-        ggtitle("No data available for this agency/component.")) %>%
-        ggplotly()
-    }
+  if (input$plot_input_b == "Budget") {
+    budget_plot()
+  } else if (input$plot_input_b == "Budget vs Backlog") {
+    budget_v_backlot_plot()
   } else {
-    warning(str_glue("Column {filtered_input_b_ratio()} not found in dataset."))
-    p1 <- (ggplot() + geom_blank() + 
-      ggtitle("No data available for this agency/component.")) %>%
-      ggplotly()
+    ggplotly(ggplot() + geom_blank() + 
+      ggtitle("No data available for this agency/component."))
   }
-  
-  if (filtered_input_b_backlog() %in% colnames(filtered_data_b())){
-    p2 <- plot_backlog(
-      filtered_data_b(),
-      filtered_input_b_backlog(),
-      agencyBudget_year())
-    if (is.null(p2)) {
-      p2 <- (ggplot() + geom_blank() + 
-        ggtitle("No data available for this agency/component.")) %>%
-        ggplotly()
-    }
-  } else {
-    warning(str_glue("Column {filtered_input_b_backlog()} not found in dataset."))
-    p2 <- (ggplot() + geom_blank() + 
-      ggtitle("No data available for this agency/component.")) %>% 
-      ggplotly()
-  }
-  
-  subplot(p1, p2, nrows = 2, shareX = TRUE, shareY = FALSE, titleY = TRUE) %>%
-    layout(title = "Budgets Ratio vs. Backlogged Requests")
 })
 ```
-
 
 Row {data-height=200}
 -------------------------------------
 
-###
+### Table
 
 ```{r}
 renderTable(filtered_data_b())
