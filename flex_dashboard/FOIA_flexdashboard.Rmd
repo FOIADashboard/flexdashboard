@@ -530,49 +530,22 @@ renderDT(datatable(
 ABOUT
 =====================================
 
-Inputs {.sidebar}
+Row {data-height=200}
 -------------------------------------
 
-<br>
+### USAGE GUIDE
 
-The [Deportation Research Clinic's](https://deportation-research.buffett.northwestern.edu/) dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. Access the Annual Reports [here](https://www.justice.gov/oip/reports-1). The dashboard's tabs reflect several of the categories of the Annual Reports. 
-
-<br/>
-For more information about the FOIA, see [foia.gov](https://www.foia.gov).
-
-Row {data-height=300}
--------------------------------------
-
-###
-
-*USAGE GUIDE*
-
-The dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. 
+The <a href="https://deportation-research.buffett.northwestern.edu/">Deportation Research Clinic's</a> dashboard displays the data from the Freedom of Information Act (FOIA) Annual Reports released each year by federal agencies and their components. 
 The sources for the department and component annual budgets data are available <a href="https://www.justice.gov/oip/reports-1">here</a>.
 
 Please select sections, data type, component agency(s), and fiscal year(s) using the sidebar.
 
 For more information about the FOIA, see <a href="https://www.foia.gov">foia.gov</a>.
 
-Created by <a href="https://deportation-research.buffett.northwestern.edu/people/">Kendall McKay</a> for the <a href="https://deportation-research.buffett.northwestern.edu">Deportation Research Clinic</a>.
+Row {data-height=600}
+-------------------------------------
 
-Project support provided by <a href="https://faculty.wcas.northwestern.edu/aaron-geller/">Aaron Geller</a> and <a href="https://www.linkedin.com/in/patrick-zacher/">Patrick Zacher</a> of Northwestern University's <a href="https://www.it.northwestern.edu/departments/it-services-support/research/">IT Research Computing and Data Services (RCDS)</a>.
-
-Funding provided by the Northwestern University <a href="https://www.ipr.northwestern.edu">Institute for Policy Research (IPR)</a>.
-
-*ACKNOWLEDGEMENTS*
-
-Created by [Kendall McKay](http://www.linkedin.com/in/kendallgmckay) for the [Deportation Research Clinic](https://deportation-research.buffett.northwestern.edu). Project manager: [Professor Jacqueline Stevens.](https://polisci.northwestern.edu/people/core-faculty/jacqueline-stevens.html) 
-<br>
-<br>
-Project support provided by [Aaron Geller](https://faculty.wcas.northwestern.edu/aaron-geller/) and [Patrick Zacher](https://www.linkedin.com/in/patrick-zacher/) of Northwestern University's [IT Research Computing and Data Services (RCDS)](https://www.it.northwestern.edu/departments/it-services-support/research/).
-<br>
-<br>
-Funding provided by the Northwestern University [Political Science Department](https://polisci.northwestern.edu/), the [Buffet Institute for Global Affairs](https://buffett.northwestern.edu/), and the [Institute for Policy Research](https://www.ipr.northwestern.edu).
-
-<br>
-
-*About*
+### DATA SOURCES
 
 Data on the FOIA Dashboard is from the United States’ Department of Justice’s [Annual FOIA Report Handbook.](https://www.justice.gov/media/1031511/dl?inline=) For more information, see the [DOJ's 2023 Training slides](https://www.justice.gov/d9/2023-10/refresher_training_for_annual_and_quarterly_foia_report_-_oct._2023.pdf) for the Annual Reports.
 
@@ -662,3 +635,15 @@ When calculating the response time for a request for expedited processing, agenc
 
 *Component Backlog:* This graph displays the selected component's FOIA backlog, taken from the Backlog Section of the Annual Reports.
 
+Rowv {data-height=200}
+-------------------------------------
+
+### ACKNOWLEDGEMENTS
+
+Created by [Kendall McKay](http://www.linkedin.com/in/kendallgmckay) for the [Deportation Research Clinic](https://deportation-research.buffett.northwestern.edu). Project manager: [Professor Jacqueline Stevens.](https://polisci.northwestern.edu/people/core-faculty/jacqueline-stevens.html) 
+<br>
+<br>
+Project support provided by [Aaron Geller](https://faculty.wcas.northwestern.edu/aaron-geller/), [Patrick Zacher](https://www.linkedin.com/in/patrick-zacher/), and John Lee of Northwestern University's [IT Research Computing and Data Services (RCDS)](https://www.it.northwestern.edu/departments/it-services-support/research/).
+<br>
+<br>
+Funding provided by the Northwestern University [Political Science Department](https://polisci.northwestern.edu/), the [Buffet Institute for Global Affairs](https://buffett.northwestern.edu/), and the [Institute for Policy Research](https://www.ipr.northwestern.edu).
