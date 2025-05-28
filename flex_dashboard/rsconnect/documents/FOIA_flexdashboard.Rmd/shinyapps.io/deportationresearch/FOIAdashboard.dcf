@@ -5,7 +5,7 @@ account: deportationresearch
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11723952
-bundleId: 10257895
+bundleId: 10357035
 url: https://deportationresearch.shinyapps.io/FOIAdashboard/
 version: 1
 asMultiple: FALSE

@@ -15,8 +15,9 @@ output:
 # check if necessary packages exist
 # if a package doesn't exist, install the package
 all_packages <- c("flexdashboard", "shiny", "knitr", "kableExtra",
-                   "dplyr", "ggplot2", "plotly", "tidyr",
-                   "stringr", "readr", "scales", "purrr")
+                  "dplyr", "ggplot2", "plotly", "tidyr",
+                  "stringr", "readr", "scales", "purrr", 
+                  "DT")
 for (p in all_packages) {
   if (!(p %in% installed.packages()[,"Package"])) {
     install.packages(p)
@@ -35,6 +36,7 @@ library(ggplot2)
 library(stringr)
 library(readr)
 library(purrr)
+library(DT)
 
 # load functions used in script
 source("functions.R")
@@ -346,7 +348,7 @@ selectInput(
 radioButtons(
   "plot_input_b",
   label = "Plot",
-  choices = c("Budget", "Budget vs Backlog"),
+  choices = c("Budget", "Budget vs Backlog", "Public Affairs vs Budget"),
   selected = "Budget")
 
 sliderInput(
@@ -501,7 +503,27 @@ Row {data-height=200}
 ### Table
 
 ```{r}
-renderTable(filtered_data_b())
+# renderTable(filtered_data_b())
+
+renderDT(datatable(
+  filtered_data_b(),
+  options = list(
+    lengthChange = FALSE,
+    searching = FALSE,
+    scrollX = TRUE,
+    paging = FALSE,
+    info = FALSE,
+    columnDefs = list(list(
+      targets = "_all", className = "dt-nowrap"
+    )),
+    # more compact row
+    rowCallback = JS(
+        "function(row, data, index) {",
+        "  $('td', row).css({'padding-top': '4px', 'padding-bottom': '4px', 'line-height': '1'});",
+        "}"
+      )
+  )
+))
 ```
 
 
