@@ -2,6 +2,47 @@
 
 This repository contains the code and data for the [FOIA Annual Report Dashboard](https://deportationresearch.shinyapps.io/FOIAdashboard/).
 
+---
+
+## Dashboard
+
+Code for the dashboard is in the `FOIAdashboard.Rmd` file.
+
+The dashboard has three tabs: `FOIA METRICS`, `BUDGETS`, `ABOUT`. The `FOIA METRICS` tab uses  RDS files to display annual FOIA statistics for each agency. Here users can choose which section (data) to display, agency and components of interest, and years of interest. The `BUDGETS` tab uses CSV files to display budget information for each agency. Users can choose agency and a component in a similar manner. The `ABOUT` tab contains information about the dashboard.
+
+`functions.R` contains helper functions used throughout the dashboard. Function used to load and combine FOIA and budget data are included in this file. Plotting functions are also defined here, which are used to create the plots in the dashboard.
+
+The dashboard is interactive through the use of `shiny` and `flexdashboard` packages. If you wish to update the visual or interactive components of the dashboard, it is advised that you familiarize yourself with [basic reactivity](https://mastering-shiny.org/basic-reactivity.html) and [implementation of `shiny` within `flexdashboard`](https://pkgs.rstudio.com/flexdashboard/articles/shiny.html).
+
+### Configuration
+
+General configuration of the dashboard is managed in the `global` code chunk (the first chunk in the dashboard). This chunk loads necessary packages, sources helper scripts, defines agencies, components, sections, and custom plot titles. Following are some important variables you may interact with often:
+
+-   `agencies`: agencies to be displayed in the `FOIA METRICS` tab
+-   `agencies_budget`: agencies to be displayed in the `BUDGETS` tab
+-   `component_list`: list components for each agency
+-   `section_choices`: available sections for each agency in the `FOIA METRICS` tab
+-   `variable_choice_list`: how the variables in each sections should be displayed in the dropdown menu
+-   `manual_title_list`: how the variable should be displayed in the plot title
+
+### Update Process
+
+Over time you may need to update the dashboard with new agencies or fiscal years. The dashboard is designed to be easily updated with new data files. The data files are stored in the `data/rds` and `data/csv` directories. The RDS files contain the FOIA statistics, while the CSV files contain budget information for each agency. Read the `Data` section for more information on how to get the rds data files for new agencies and fiscal years.
+
+Once new agency data is added to the `data/rds` or `data/csv` directory, the dashboard should be updated to reflect the new data. This is done by updating the `agencies` or `agencies_budget` variables in the `global` code chunk. You can choose to list the agency's components using the `component_list` variable. If the agency isn't specified in the `components_list` variable, then the dashboard will use all components included in the agency data.
+
+If you are familiar with R, shiny, and flexdashboard, you can make changes to the dashboard code directly in the `FOIAdashboard.Rmd` file. As you make changes, you can preview the dashboard by clicking on `Run Document` at the top of the source code in R Studio.
+
+### Publishing App
+
+The shiny app is hosted via [shinyapps.io](https://www.shinyapps.io/). To publish the app, you need to have the FOIA Dashboard shinyapps.io account setup. You can initiate the setup by clicking on the `Publish` button on the top right portion of the script pane in R Studio. Ask Killian Daly for the credentials to push the update.
+
+When you publish the dashboard from your machine for the first time, you may be prompted to include the title for the dashboard. The title should be "FOIAdashboard".
+
+When you update the code and once you feel that the updates are ready to be published online, click the `Publish` button. A pop up will appear and you can choose which files to include in the deployment. Select the following files: `FOIAdashboard.Rmd`, `foia_data.rds`, `budget_data.rds`, and `functions.R`. Once you have made the selection, click publish. Once the deployment is complete, [check the dashboard](https://deportationresearch.shinyapps.io/FOIAdashboard/) to confirm the updates.
+
+---
+
 ## Data
 
 ### RDS File
@@ -26,36 +67,8 @@ Where `{component}` is the name of the component of the agency. For example, if 
 
 The RDS files and CSV files work independently, so not all agencies need to be present in both formats.
 
-## Dashboard
+---
 
-Code for the dashboard is in the `FOIAdashboard.Rmd` file.
+### Version Control
 
-The dashboard has three tabs: `FOIA METRICS`, `BUDGETS`, `ABOUT`. The `FOIA METRICS` tab uses the RDS files to display annual FOIA statistics for each agency. Here users can choose which section (data) to display, agency and components of interest, and years of interest. The `BUDGETS` tab uses the CSV files to display budget information for each agency. Similarly the users can choose agency and a component. The `ABOUT` tab contains information about the dashboard.
-
-`functions.R` contains helper functions used in the dashboard. Function used to load and combine FOIA and budget data are included in this file. Plotting functions are also included here, which are used to create the plots in the dashboard.
-
-### Configuration
-
-General configuration of the dashboard is managed in the `global` code chunk (the first chunk in the dashboard). This chunk loads necessary packages, sources helper scripts, defines agencies, components, sections, and custom plot titles. Following are some important variables you may interact with often:
-
--   `agencies`: agencies to be displayed in the `FOIA METRICS` tab
--   `agencies_budget`: agencies to be displayed in the `BUDGETS` tab
--   `component_list`: list components for each agency
--   `section_choices`: available sections for each agency in the `FOIA METRICS` tab
--   `variable_choice_list`: how the variables in each sections should be displayed in the dropdown menu
--   `manual_title_list`: how the variable should be displayed in the plot title
-
-### Update Process
-
-Once new agency data is added to the `data/rds` or `data/csv` directory, the dashboard should be updated to reflect the new data. This is done by updating the `agencies` or `agencies_budget` variables in the `global` code chunk. You can choose to list the agency's components using the `component_list` variable. If the agency isn't specified in the `components_list` variable, then the dashboard will use all components included in the agency data.
-
-If you are familiar with R, shiny, and flexdashboard, you can make changes to the dashboard code directly in the `FOIAdashboard.Rmd` file.
-
-### Publishing App
-
-The shiny app is hosted via [shinyapps.io](https://www.shinyapps.io/). To publish the app, you need to have the FOIA Dashboard shinyapps.io account setup. You can initiate the setup by clicking on the `Publish` button on the top right portion of the script pane in R Studio. Ask Killian Daly for the credentials to push the update.
-
-When you publish the dashboard from your machine for the first time, you may be prompted to include the title for the dashboard. The title should be "FOIAdashboard".
-
-When you update the code and once you feel that the updates are ready to be published online, click the `Publish` button. A pop up will appear and you can choose which files to include in the deployment. Select the following files: `FOIAdashboard.Rmd`, `foia_data.rds`, `budget_data.rds`, and `functions.R`. Once you have made the selection, click publish. Once the deployment is complete, [check the dashboard](https://deportationresearch.shinyapps.io/FOIAdashboard/) to confirm the updates.
-
+The dashboard is version controlled using git. To learn how to use git and gitHub, refer to the [GitHub guide](https://guides.github.com/activities/hello-world/). Alternatively, you can refer to NUIT RCDS [git resource guide](https://sites.northwestern.edu/researchcomputing/resource-guides/resource-guide-git-and-github/).
