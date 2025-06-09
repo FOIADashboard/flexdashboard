@@ -12,6 +12,9 @@ output:
 ---
 
 ```{r global}
+# configuartion chunk for the dashboard. Here you will find variables 
+# that chooses which agencies and components are available.
+
 # check if necessary packages exist
 # if a package doesn't exist, install the package
 all_packages <- c("flexdashboard", "shiny", "knitr", "kableExtra",
@@ -40,7 +43,6 @@ library(DT)
 
 # load functions used in script
 source("functions.R")
-source("ui_functions.R")
 
 # dashboard variable setup ------------------------------------ 
 
@@ -173,6 +175,15 @@ manual_title_list <- list(
 ```
 
 ```{r setup-foia-data}
+# functions to load the data. The data should be saved in the data/rds and
+# data/csv folder for FOIA and budget data, respectively.
+# Few things happen in the load functions. It reads the rds and csv files for the agencies
+# specified in the "agencies" and "agencies_budget" variables.
+# List of data frames is created. Then this list is saved as a rds file in the
+# project directory (foia_data.rds and budget_data.rds). These files are used
+# for publishing the dashboard to shinyapps.io. It is designed this way because
+# individual files have to be selected when publishing the app.
+
 # load foia data for all agencies
 master_foia_data <- load_foia_data(agencies)
 master_budget_data <- load_all_agencies_budget(agencies_budget)
