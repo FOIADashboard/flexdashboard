@@ -52,8 +52,8 @@ source("functions.R")
 # https://github.com/rcds-dssv/foia_data_mining
 # After extraction, move the resulting .rds file to data/rds.
 # The .rds file should be saved as {agency}_data.rds
-agencies <- c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS", "DOI",
-              "GSA", "SEC", "VA")
+agencies <- c("DHS", "DOI", "DOJ", "DOL", "DOS", "EPA",
+              "GSA", "HHS", "SEC", "VA" )
 
 # # Agencies for which budget data is available in CSV format.
 # Each .csv file should represent an agency.
@@ -64,15 +64,14 @@ agencies_budget <- c("DHS", "DOL", "DOJ", "HHS", "DOS")
 # Dictionary mapping agencies to their subcomponents.
 # Used to populate component selection UI.
 component_list <- list(
-  "DHS" = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL", "FPS",
-            "FEMA", "FLETC", "I&A", "TSA", "USCG", "USSS"),
-  "EPA" = c("HQ", "Region 1", "Region 2", "Region 3",
-            "Region 4", "Region 5", "Region 6", "Region 7",
-            "Region 8", "Region 9", "Region 10"),
-  "DOL" = c("OSHA", "WHD", "OSEC", "OIG", "SOL", "OPA", "OCIA", "ETA", "OASP"),
-  "DOJ" = c("EOIR", "OIG", "BOP", "DEA", "Civil Rights", "FBI", "OIP"),
-  "HHS" = c("CDC", "ACF", "OIG", "CMS", "FDA", "NIH", "OS"),
-  "DOS" = c("OIG", "DoS")
+  "DHS" = c("CBP", "CRCL", "FEMA", "FLETC", "FPS", "I&A", "ICE", "OIG", "PRIV",
+            "TSA", "USCG", "USCIS", "USSS"),
+  "EPA" = c("HQ", "Region 1", "Region 2", "Region 3", "Region 4", "Region 5",
+            "Region 6", "Region 7", "Region 8", "Region 9", "Region 10"),
+  "DOL" = c("ETA", "OASP", "OCIA", "OIG", "OPA", "OSEC", "OSHA", "SOL", "WHD"),
+  "DOJ" = c("BOP", "Civil Rights", "DEA", "EOIR", "FBI", "OIG", "OIP"),
+  "HHS" = c("ACF", "CDC", "CMS", "FDA", "NIH", "OIG", "OS"),
+  "DOS" = c("DoS", "OIG")
 )
 
 # UI, data selection, plot output configuration ----------------------------
@@ -81,12 +80,13 @@ component_list <- list(
 # The vector is formmated such that
 # c("Name to display in dropdown" = "section_name", ...)
 section_choices <- c(
-    "Personnel and Cost" = "PersonnelAndCostSection",
-    "Backlog" = "BacklogSection",
-    "Expedited Processing" = "ExpeditedProcessingSection",
-    "Processed Request" = "ProcessedRequestSection",
-    "Pending Perfected Requests" = "PendingPerfectedRequestsSection",
-    "Appeal Disposition" = "AppealDispositionSection")
+  "Appeal Disposition" = "AppealDispositionSection",
+  "Backlog" = "BacklogSection",
+  "Expedited Processing" = "ExpeditedProcessingSection",
+  "Pending Perfected Requests" = "PendingPerfectedRequestsSection",  
+  "Personnel and Cost" = "PersonnelAndCostSection",
+  "Processed Request" = "ProcessedRequestSection"
+)
 selected_section_on_startup <- "PersonnelAndCostSection"
 
 # define options for selected section
