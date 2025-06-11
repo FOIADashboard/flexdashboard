@@ -5,7 +5,7 @@
 ## How To Update the Dashboard (Note: Subject to Modification as we transpose fully to Github & Notion)
 
 - Download **R 4.33** and **RStudio**.  
-- All intermediate data and raw files should be stored in the Box folder
+- All raw and intermediate data files should be stored in the Box folder
   - [FOIA Dashboard Box folder](https://app.box.com/s/f4ffqpgph38z530kds6ve2dfyuc0ot1g)
 - Clone or download the repository to your local machine. Dashboard code and data files are in the `flex_dashboard` folder.
   - Ensure that these files are saved to your **Desktop** (not just the Downloads folder).  
