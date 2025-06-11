@@ -3,19 +3,13 @@
 
 
 ## How To Update the Dashboard (Note: Subject to Modification as we transpose fully to Github & Notion)
+
 - Download **R 4.33** and **RStudio**.  
-- Download all files from the **FOIA Dashboard Box folder** to your computer:  
-  - [FOIA Dashboard Files](https://app.box.com/s/f4ffqpgph38z530kds6ve2dfyuc0ot1g)  
+- All intermediate data and raw files should be stored in the Box folder
+  - [FOIA Dashboard Box folder](https://app.box.com/s/f4ffqpgph38z530kds6ve2dfyuc0ot1g)
+- Clone or download the repository to your local machine. Dashboard code and data files are in the `flex_dashboard` folder.
   - Ensure that these files are saved to your **Desktop** (not just the Downloads folder).  
-- Locate the file named **flexdashboard_example.Rmd** (inside the `flex_dashboard` folder).  
-- Open **flexdashboard_example.Rmd** in RStudio.  
-- Make necessary edits/updates:  
-  - Use the **"Run Document"** tool to ensure your edits show up correctly.  
-  - Use **Ctrl + Z** to undo if necessary.  
-- **Publish Changes to the Website:**  
-  - After running the document, click **"Publish"**.  
-  - Follow the prompt and log into the **ShinyApps.io** account in your browser:  
-    - **Email:** [deportationresaerchclinic@proton.me](mailto:deportationresaerchclinic@proton.me)  
-    - **Password:** \*\*\*  
-  - Copy and paste the confirmation.  
-  - Click **"Publish!"**  
+- Locate the file named **FOIAdashboard.Rmd** (inside the `flex_dashboard` folder).  
+- Open **FOIAdashboard.Rmd** in RStudio.  
+- Further instruction on editing, updating, and publishing the dashboard can be found in the [`flex_dashboard/README.md`](https://github.com/FOIADashboard/flexdashboard/blob/main/flex_dashboard/README.md) file.
+

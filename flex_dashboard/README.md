@@ -6,7 +6,12 @@ This repository contains the code and data for the [FOIA Annual Report Dashboard
 
 ## Dashboard
 
-Code for the dashboard is in the `FOIAdashboard.Rmd` file.
+Code for the dashboard is in the `FOIAdashboard.Rmd` file. To set up environment for dashboard, you need [R](https://cran.r-project.org/bin/windows/base/) and [R Studio](https://posit.co/download/rstudio-desktop/). The dashboard is built using the `flexdashboard` and `shiny` packages in R. To run the dashboard, you need to install these packages if you haven't already. You can do this by running the following commands in R:
+
+```R
+install.packages("flexdashboard")
+install.packages("shiny")
+```
 
 The dashboard has three tabs: `FOIA METRICS`, `BUDGETS`, `ABOUT`. The `FOIA METRICS` tab uses  RDS files to display annual FOIA statistics for each agency. Here users can choose which section (data) to display, agency and components of interest, and years of interest. The `BUDGETS` tab uses CSV files to display budget information for each agency. Users can choose agency and a component in a similar manner. The `ABOUT` tab contains information about the dashboard.
 
