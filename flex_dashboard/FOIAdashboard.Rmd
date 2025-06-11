@@ -15,8 +15,8 @@ output:
 # configuartion chunk for the dashboard. Here you will find variables 
 # that chooses which agencies and components are available.
 
-# check if necessary packages exist
-# if a package doesn't exist, install the package
+# Loads necessary packages for dashboard functionality.
+# If any package is missing, it will be installed on the fly.
 all_packages <- c("flexdashboard", "shiny", "knitr", "kableExtra",
                   "dplyr", "ggplot2", "plotly", "tidyr",
                   "stringr", "readr", "scales", "purrr", 
@@ -27,6 +27,7 @@ for (p in all_packages) {
   }
 }
 
+# Load all required libraries.
 library(flexdashboard)
 library(shiny)
 library(knitr)
@@ -54,12 +55,14 @@ source("functions.R")
 agencies <- c("DHS", "EPA", "DOL", "DOJ", "DOS", "HHS", "DOI",
               "GSA", "SEC", "VA")
 
-# Agencies with budget data. Each .csv file should
-# represent an agency. The .csv files are saved in data/csv.
+# # Agencies for which budget data is available in CSV format.
+# Each .csv file should represent an agency.
+# The .csv files are saved in data/csv.
 # the .csv should be saved as {agency}_budget_ratio.csv
 agencies_budget <- c("DHS", "DOL", "DOJ", "HHS", "DOS")
 
-# A list of components for each agency. 
+# Dictionary mapping agencies to their subcomponents.
+# Used to populate component selection UI.
 component_list <- list(
   "DHS" = c("CBP", "PRIV", "USCIS", "ICE", "OIG", "CRCL", "FPS",
             "FEMA", "FLETC", "I&A", "TSA", "USCG", "USSS"),
@@ -184,11 +187,17 @@ manual_title_list <- list(
 # for publishing the dashboard to shinyapps.io. It is designed this way because
 # individual files have to be selected when publishing the app.
 
-# load foia data for all agencies
+# `load_foia_data` reads .rds files from data/rds for each agency.
+# if run locally, it will read the files from data/rds and save the object 
+# as `foia_data.rds`
 master_foia_data <- load_foia_data(agencies)
+
+# `load_all_agencies_budget` reads .csv budget files from data/csv.
+# if run locally, it will read the files from data/csv and save the object
+# as `budget_data.rds`
 master_budget_data <- load_all_agencies_budget(agencies_budget)
 
-# get all available components for agency if it was not specified in component_list
+# If any agency in `agencies` lacks a component list, derive it from its data.
 for (agency in agencies) {
   if (!(agency %in% names(component_list))) {
     component_list[[agency]] <- extract_agency_components(master_foia_data[[agency]])
@@ -203,8 +212,8 @@ FOIA Metrics
 Inputs {.sidebar}
 -----------------------------------
 
-```{r}
-# Section selection
+```{r foia_metrics_ui}
+# UI for selecting the FOIA section (e.g., Personnel and Cost, Backlog, etc.)
 radioButtons(
   "section_input",
   label="Section",
@@ -212,28 +221,28 @@ radioButtons(
   selected=selected_section_on_startup,
 )
 
-# Agency selection
+# UI for selecting the agency (e.g., DHS, EPA)
 selectInput(
   "agency_input",
   "Agency", 
   choices =  agencies, 
   selected = "DHS")
 
-# column select UI. Update the variable name
+# UI for selecting a variable from the selected section.
 selectInput(
   "variable_select_input",
   "Data",
   choices = variable_choice_list[[selected_section_on_startup]],
   selected = variable_choice_list[[selected_section_on_startup]][1])
 
-# component selection
+# UI for selecting one or more components (e.g., CBP, ICE)
 checkboxGroupInput(
   "component_input",
   "Component",
   choices = component_list[["DHS"]], 
   selected = component_list[["DHS"]][c(1,2)])
 
-# Fiscal Year selection
+# UI for selecting a range of fiscal years (FY10 to FY23)
 sliderInput(
   "fy_input",
   "FY", 
@@ -243,6 +252,7 @@ sliderInput(
   step = 1,
   sep = "")
 
+# Footer with information about the dashboard
 HTML(
   "
   <div style=\"font-size: smaller; word-break: break-word; overflow-wrap: break-word;\">
@@ -260,9 +270,9 @@ Row
 
 ### Plot
 
-```{r}
-# capture section, agency, component,
-# fiscal year, and variable selection
+```{r foia_metrics_server}
+# Reactive expressions to capture UI inputs.
+# The input IDs correspond to the UI elements defined above.
 section <- reactive({
   input$section_input
 })
@@ -279,13 +289,13 @@ variable <- reactive({
   input$variable_select_input
 })
 
-# Update filtered data variable name
+# Filters the data for selected agency and section.
 filtered_data <- reactive({
   req(agency())
   master_foia_data[[agency()]][[section()]]
 })
 
-# update data section selection based on selected section
+# When section changes, update the variable dropdown to reflect relevant choices.
 observe({
   req(section())
   updateSelectInput(
@@ -295,7 +305,7 @@ observe({
   )
 })
 
-# update component selection based on selected agency
+# When agency changes, update the component checkboxes with default selection.
 observe({
   req(agency())
   comp_preselected_ <- if (length(component_list[[agency()]]) > 1) c(1,2) else 1
@@ -306,18 +316,19 @@ observe({
   )
 })
 
-# Maps the column name to the plot title
+# Retrieves a manual display title for the selected variable (if available)
 filtered_input_manual_title <- reactive({
   req(variable())
   req(section())
   if (section() %in% names(manual_title_list)) {
     manual_title_list[[section()]][[variable()]]
   } else {
-    return(NULL)  # Return NULL if section not found
+    # Return NULL if section not found
+    return(NULL)
   }
 })
 
-# create and display plot
+# Generates the plot using the filtered data and selected parameters.
 renderPlotly({
   if ((variable() %in% colnames(filtered_data())) &
       (any(component() %in% filtered_data()$OrganizationAbbreviationText))) {
@@ -340,28 +351,29 @@ Inputs {.sidebar}
 
 <br/>
 
-```{r}
-# Agency selection
+```{r budgets_ui}
+# Dropdown to select agency for budget plots
 selectInput(
   "agency_input_b",
   label = "Agency", 
   choices =  agencies_budget, 
   selected = "DHS")
 
-# component selection
+# Dropdown to select component (auto-updated based on agency)
 selectInput(
   "component_input_b",
   label = "Component",
   choices = component_list[["DHS"]], 
   selected = component_list[["DHS"]][c(1,2)])
 
-# Plot selection
+# Choose type of plot to display: budget, budget vs backlog, or public affairs comparison
 radioButtons(
   "plot_input_b",
   label = "Plot",
   choices = c("Budget", "Budget vs Backlog", "Public Affairs vs Budget"),
   selected = "Budget")
 
+# Fiscal year selector for budget plot
 sliderInput(
   "fy_input_b",
   "FY", 
@@ -371,6 +383,7 @@ sliderInput(
   step = 1,
   sep = "")
 
+# Footer with information about the dashboard
 HTML(
   "
   <div style=\"font-size: smaller; word-break: break-word; overflow-wrap: break-word;\">
@@ -393,8 +406,8 @@ Row {data-height=400}
 
 ### Plot - Select Plot Using Sidebar
 
-```{r, results='asis'}
-# capture agency, component, and fiscal year selection
+```{r budgets_server, results='asis'}
+# Reactive expressions to capture UI inputs for budget plots.
 agency_b <- reactive({
   input$agency_input_b
 })
@@ -405,13 +418,13 @@ fy_b <- reactive({
   input$fy_input_b[1]:input$fy_input_b[2]
 })
 
-# Update filtered data
+# Extract budget data for selected agency
 filtered_data_b <- reactive({
   req(agency_b())
   master_budget_data[[agency_b()]]
 })
 
-# update component selection based on selected agency
+# Update component dropdown if agency changes
 observe({
   req(agency_b())
   updateSelectInput(
@@ -421,7 +434,8 @@ observe({
   )
 })
 
-# column name processing for budgets
+# Helper functions to generate column names for selected component's budget, ratio, and backlog.
+# budget
 filtered_input_b <- reactive({
   component <- component_b()
   
@@ -432,8 +446,7 @@ filtered_input_b <- reactive({
   column_to_plot <- paste0(component, "_budget")
   return(column_to_plot)
 })
-
-# column name processing for budgets ratio
+# ratio
 filtered_input_b_ratio <- reactive({
   component <- component_b()
   
@@ -444,8 +457,7 @@ filtered_input_b_ratio <- reactive({
   column_to_plot <- paste0(component, "_ratio")
   return(column_to_plot)
 })
-
-# column name processing for backlog
+# backlog
 filtered_input_b_backlog <- reactive({
   component <- component_b()
   
@@ -457,12 +469,12 @@ filtered_input_b_backlog <- reactive({
   return(column_to_plot)
 })
 
-# process the fiscal year to match the budget data format
+# Fiscal years as character vector formatted to match column headers in budget data.
 agencyBudget_year <- reactive({
   paste0("20", fy_b())
 })
 
-# plot for budget plot
+# Plot for component budget over time.
 budget_plot <- reactive({
   # temporary solution to missing budget column name (some missing underscore)
   if (!(filtered_input_b() %in% colnames(filtered_data_b()))) {
@@ -485,7 +497,7 @@ budget_plot <- reactive({
   }
 })
 
-# plot for budget vs backlog comparison plot
+# Plot comparing budget ratio vs backlog
 budget_v_backlot_plot <- reactive({
   plot_ratio_v_backlog(
     filtered_data_b(),
@@ -496,6 +508,7 @@ budget_v_backlot_plot <- reactive({
   )
 })
 
+# Renders the selected plot based on radio button input
 renderPlotly({
   if (input$plot_input_b == "Budget") {
     budget_plot()
@@ -514,8 +527,7 @@ Row {data-height=200}
 ### Table
 
 ```{r}
-# renderTable(filtered_data_b())
-
+# Renders the raw budget data table with improved formatting
 renderDT(datatable(
   filtered_data_b(),
   options = list(
