@@ -296,6 +296,8 @@ plot_ratio_v_backlog <- function(
     line_colors = c("red", "blue"),
     plot_title = "Budgets Ratio vs. Backlogged Requests"
 ) {
+  # stack two plots. The top plot is a budget ratio plot and the bottom plot
+  # is the number of backlogs
   
   filtered_input_b_ratio <- str_glue("{component}_ratio")
   filtered_input_b_backlog <- str_glue("{component}_backlog")
@@ -338,6 +340,7 @@ plot_ratio_v_backlog <- function(
 }
 
 plot_no_data <- function() {
+  # use this plot whenever a required column is missing for a plot
   ggplot() +
     annotate(label = "Insufficient data for this agency / component", 
              x = 0, y = 0, geom = "text", size = 8) +
@@ -355,7 +358,7 @@ plot_stacked_area <- function(data, column_names, selected_components, selected_
     labs(title = paste("Stacked Area Chart of Selected Components"),
          y = "Value",
          x = "FY",
-         fill = "OrganizationAbbreviationText",) +
+         fill = "OrganizationAbbreviationText") +
     theme_minimal() +
     theme(legend.position = "top") 
   
@@ -405,3 +408,59 @@ plot_two_columns_twoaxes <- function(data, selected_columns, selected_years) {
   return(plot)
 }
 
+plot_publicaffairs_ratio <- function(
+    data,
+    component,
+    selected_years, 
+    line_color = "#F8766D"
+) {
+  # function to plot the ratio between public affairs and foia expenditure
+  
+  foiacost_colname <- str_c(component, "_foiacost")
+  publicaffairs_colname <- str_c(component, "_publicaffairscost")
+  
+  if (!all(c(foiacost_colname, publicaffairs_colname) %in% colnames(data))) {
+    ggplot() +
+      annotate(label = "Missing foiacost or publicaffairscost column for this agency / component", 
+               x = 0, y = 0, geom = "text", size = 8) +
+      theme_void()
+  }
+  plot_data <- data %>%
+    filter(Year %in% selected_years) %>%
+    select(Year, all_of(c(foiacost_colname, publicaffairs_colname))) %>%
+    rename_with(.fn = ~ str_extract(.x, pattern = "[[:alpha:]]+$"), .cols = contains("_")) %>%
+    mutate(
+      Value = publicaffairscost / foiacost,
+      Metric = "Public Affairs Ratio",
+      text = str_c(
+        str_glue("Year: {Year}"),
+        str_glue("Percent: {format(Value*100, digits = 2, scientific = FALSE)}%"),
+        str_glue("Public Affairs Expenditures ($): {format(publicaffairscost, format=\"d\", big.mark=\",\")}"),
+        str_glue("FOIA Expenditures ($): {format(foiacost, format=\"d\", big.mark=\",\")}"),
+        sep = "\n"
+      )
+    )
+  
+  # remove rows with missing values
+  plot_data <- na.omit(plot_data)
+  
+  # Convert years to numeric
+  selected_years <- as.numeric(selected_years)
+  
+  # Create a line plot using ggplot2
+  plot <- ggplot(plot_data, aes(x = Year, y = Value*100, color = Metric)) +
+    geom_point(aes(text = text)) +
+    geom_line() +
+    labs(title = paste("Public Affairs / Total Budget (%)"),
+         y = paste("Percent Total Budget"),
+         x = "Year") +
+    theme_minimal() +
+    theme(legend.position = "top") +
+    scale_x_continuous(
+      breaks = breaks_pretty(),
+      limits = c(min(selected_years), max(selected_years))) +
+    scale_color_manual(values = set_names(line_color, "Public Affairs Ratio")) +
+    scale_y_continuous(labels = function(x) paste0(format(x, scientific = FALSE), "%"))
+  
+  return(ggplotly(plot, tooltip = "text"))
+}

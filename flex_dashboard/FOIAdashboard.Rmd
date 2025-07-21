@@ -436,8 +436,8 @@ radioButtons(
   # only has one selection for now... this can be modified when public affairs / 
   # expenditures section is added
   # choices = c("Budget" = "Budget", 
-  #             "Budgets Ratio and Backlogged Requests" = "Budget vs Backlog", 
-  #             "Public Affairs vs Budget"),
+  #             "Budgets Ratio and Backlogged Requests" = "budget_v_backlog", 
+  #             "Public Affairs vs Budget" = "publicaffairs_v_budget"),
   choices = c("Budgets Ratio and Backlogged Requests" = "budget_v_backlog"),
   selected = "budget_v_backlog")
 
@@ -506,9 +506,6 @@ observe({
   )
 })
 
-# budget
-filtered_input_b <- reactive(paste0(component_b(), "_budget"))
-
 # Fiscal years as character vector formatted to match column headers in budget data.
 agencyBudget_year <- reactive({
   paste0("20", fy_b())
@@ -516,11 +513,13 @@ agencyBudget_year <- reactive({
 
 # Plot for component budget over time.
 budget_plot <- reactive({
+  filtered_input_b <- paste0(component_b(), "_budget")
+  
   # temporary solution to missing budget column name (some missing underscore)
-  if (!(filtered_input_b() %in% colnames(filtered_data_b()))) {
-    plot_colname <- str_replace(filtered_input_b(), "_", ".")
+  if (!(filtered_input_b %in% colnames(filtered_data_b()))) {
+    plot_colname <- str_replace(filtered_input_b, "_", ".")
   } else {
-    plot_colname <- filtered_input_b()
+    plot_colname <- filtered_input_b
   }
   
   if (plot_colname %in% colnames(filtered_data_b())){
@@ -544,7 +543,7 @@ ratio_v_backlog_title <- reactive({
 })
 
 # Plot comparing budget ratio vs backlog
-budget_v_backlot_plot <- reactive({
+budget_v_backlog_plot <- reactive({
   plot_ratio_v_backlog(
     filtered_data_b(),
     component_b(),
@@ -554,12 +553,23 @@ budget_v_backlot_plot <- reactive({
   )
 })
 
+# Plot public affairs / foia expenditure ratio
+publicaffairs_ratio_plot <- reactive({
+  plot_publicaffairs_ratio(
+    filtered_data_b(),
+    component_b(),
+    agencyBudget_year()
+  )
+})
+
 # Renders the selected plot based on radio button input
 renderPlotly({
   if (input$plot_input_b == "Budget") {
     budget_plot()
   } else if (input$plot_input_b == "budget_v_backlog") {
-    budget_v_backlot_plot()
+    budget_v_backlog_plot()
+  } else if (input$plot_input_b == "publicaffairs_v_budget") {
+    publicaffairs_ratio_plot()
   } else {
     ggplotly(ggplot() + geom_blank() + 
       ggtitle("No data available for this agency/component."))
