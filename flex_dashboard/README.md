@@ -32,9 +32,9 @@ General configuration of the dashboard is managed in the `global` code chunk (th
 
 ### Update Process
 
-Over time you may need to update the dashboard with new agencies or fiscal years. The dashboard is designed to be easily updated with new data files. The data files are stored in the `data/rds` and `data/csv` directories. The RDS files contain the FOIA statistics, while the CSV files contain budget information for each agency. Read the `Data` section for more information on how to get the rds data files for new agencies and fiscal years.
+Over time you may need to update the dashboard with new agencies or fiscal years. The dashboard is designed to be easily updated with new data files. The data files for FOIA report are stored in the `data/rds` directory. Budget data is saved as `data/FOIA Dashboard Government Budgets.xlsx` file. The RDS files contain the FOIA statistics, while the XLSX file contains budget information for each agency (each agency being a sheet). Read the `Data` section for more information on how to get the rds data files for new agencies and fiscal years.
 
-Once new agency data is added to the `data/rds` or `data/csv` directory, the dashboard should be updated to reflect the new data. This is done by updating the `agencies` or `agencies_budget` variables in the `global` code chunk. You can choose to list the agency's components using the `component_list` variable. If the agency isn't specified in the `components_list` variable, then the dashboard will use all components included in the agency data.
+Once new agency data is added to the `data/rds` directory or XLSX file is updated, the dashboard should be updated to reflect the new data. This is done by updating the `agencies` or `agencies_budget` variables in the `global` code chunk. You can choose to list the agency's components using the `component_list` variable. If the agency isn't specified in the `components_list` variable, then the dashboard will use all components included in the agency data.
 
 If you are familiar with R, shiny, and flexdashboard, you can make changes to the dashboard code directly in the `FOIAdashboard.Rmd` file. As you make changes, you can preview the dashboard by clicking on `Run Document` at the top of the source code in R Studio.
 
@@ -56,21 +56,24 @@ The dashboard uses data processed by the [FOIA data mining script](https://githu
 
 Once the data is processed, move the `.rds` file to the `data/rds` directory. You should see that some data is already there. If you are updating an agency, replace the old file with the new one.
 
-### CSV File
+### XLSX File
 
-The budget data can be optionally included for each agency as a CSV file. This file is used to display statistics in the `Budget` tab of the dashboard.
+The budget data is available as `FOIA Dashboard Government Budgets.xlsx` file. This file is used to display statistics in the `Budget` tab of the dashboard.
 
-The file name should follow the same convention: `{agency}_budget_ratio.csv`. The origin of these files are not clear, but Jackie's lab members should be able to track and provide them.
+This data is maintained by Jackie's members in Google Sheet. Once the data is updated, you can save it locally as an `.xlsx` file. 
+Each sheet represents a department (the sheet name should be saved as the acronym of the corresponding agency and should match the values in the `agencies_budget` vector).
 
-For the visualization in the `Budget` tab to display correctly, the CSV file should contain (at least) the following columns:
+For the visualization in the `Budget` tab to display correctly, the each sheet should contain (at least) the following columns:
 
 `Year`, `{component}_budget`, `{component}_ratio`, `{component}_backlog`
 
-Where `{component}` is the name of the component of the agency. For example, if `DHS` has components `ICE` and `CBP`, the CSV file should contain at least
+Where `{component}` is the name of the component of the agency. For example, if `DHS` has components `ICE` and `CBP`, the sheet should contain at least
 
 `Year`, `ICE_budget`, `ICE_ratio`, `ICE_backlog`, `CBP_budget`, `CBP_ratio`, `CBP_backlog`
 
-The RDS files and CSV files work independently, so not all agencies need to be present in both formats.
+The annual FOIA report and budget data work independently, so not all agencies need to be present in both formats.
+
+More detail about the Budget Google Sheet file is available in the [Box note file](https://app.box.com/s/j8a0sdr7om3n2aib7huqicazwgs34qal).
 
 ---
 

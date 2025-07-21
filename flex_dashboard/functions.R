@@ -50,25 +50,35 @@ load_foia_data <- function(agency_list=NULL) {
 }
 
 create_budget_data <- function(agency_list) {
-  budget_data <- list()
   
-  if (!dir.exists("./data/csv")) {
-    stop("./data/csv directory does not exist!")
+  budget_data_filename <- "data/FOIA Dashboard Government Budgets.xlsx"
+  
+  if (!file.exists(budget_data_filename)) {
+    stop(str_glue("{budget_data_filename} file does not exist!"))
   }
   
-  for (agency in agency_list) {
-    budget_data[[agency]] <- readr::read_csv(str_glue("./data/csv/{agency}_budget_ratio.csv"))
+  names(agency_list) <- agency_list
+  
+  sheet_names <- excel_sheets(budget_data_filename)
+  
+  if (!all(agency_list %in% sheet_names)) {
+    missing_agency <- paste(setdiff(agency_list, sheet_names), collapse = ", ")
+    stop(str_glue("Excel budget file missing some agencies: {missing_agency}"))
   }
-
+  
+  budget_data <- map(agency_list, ~ read_xlsx(budget_data_filename, .x))
+  
   saveRDS(budget_data, file = "budget_data.rds")
   
   return(budget_data)
 }
 
 load_all_agencies_budget <- function(agency_list=NULL) {
+  
+  budget_xlsx_filename <- "data/FOIA Dashboard Government Budgets.xlsx"
   budget_data_filename <- "budget_data.rds"
   
-  if ((!file.exists(budget_data_filename)) | dir.exists("data/csv/")) {
+  if ((!file.exists(budget_data_filename)) | file.exists(budget_xlsx_filename)) {
     budget_data <- create_budget_data(agency_list)
   } else {
     budget_data <- readRDS(budget_data_filename)

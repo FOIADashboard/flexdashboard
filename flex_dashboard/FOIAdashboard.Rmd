@@ -41,6 +41,7 @@ library(stringr)
 library(readr)
 library(purrr)
 library(DT)
+library(readxl)
 
 # load functions used in script
 source("functions.R")
@@ -89,10 +90,8 @@ component_list <- list(
   "DOS" = c("DoS", "OIG")
 )
 
-# # Agencies for which budget data is available in CSV format.
-# Each .csv file should represent an agency.
-# The .csv files are saved in data/csv.
-# the .csv should be saved as {agency}_budget_ratio.csv
+# Agencies for which budget data is available in Excel
+# Each sheet should represent an agency (in the acronym format).
 agencies_budget <- c(
   "Department of Homeland Security" = "DHS", 
   "Department of Justice" = "DOJ", 
@@ -242,9 +241,9 @@ fiscal_year_range <- c(10, 23)
 ```{r setup-foia}
 # Run specific functions and code necessary for the dashboard
 
-# Load the data. The data should be saved in the data/rds and
-# data/csv folder for FOIA and budget data, respectively.
-# Few things happen in the load functions. It reads the rds and csv files for the agencies
+# Load the data. The data should be saved in the data/rds folder for foia data
+# and "FOIA Dashboard Government Budget.xlsx" for budget data.
+# Few things happen in the load functions. It reads the rds and excel files for the agencies
 # specified in the "agencies" and "agencies_budget" variables.
 # List of data frames is created. Then this list is saved as a rds file in the
 # project directory (foia_data.rds and budget_data.rds). These files are used
@@ -256,8 +255,8 @@ fiscal_year_range <- c(10, 23)
 # as `foia_data.rds`
 master_foia_data <- load_foia_data(agencies)
 
-# `load_all_agencies_budget` reads .csv budget files from data/csv.
-# if run locally, it will read the files from data/csv and save the object
+# `load_all_agencies_budget` reads .xlsx budget file from data/.
+# if run locally, it will read the "FOIA Dashboard Government Budget.xlsx" file and save the object
 # as `budget_data.rds`
 master_budget_data <- load_all_agencies_budget(agencies_budget)
 
