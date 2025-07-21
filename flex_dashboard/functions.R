@@ -137,6 +137,11 @@ plot_budget_metrics <- function(
     print(selected_years)
   }
   
+  if (!(selected_columns %in% colnames(data))) {
+    warning(str_glue("Column {selected_columns} not found in dataset."))
+    return(plot_no_data())
+  }
+  
   plot_data <- data %>%
     filter(Year %in% selected_years) %>%
     select(Year, all_of(selected_columns)) %>%
@@ -165,42 +170,73 @@ plot_budget_metrics <- function(
   return(ggplotly(plot))
 }
 
-plot_budget_ratio <- function(data, column_to_plot, selected_years, line_color = "F8766D") {
+plot_budget_ratio <- function(data, column_to_plot, selected_years, component, line_color = "F8766D") {
   
   all_missing <- all(is.na(data[[column_to_plot]]))
   if (all_missing) {
     return(NULL)
   }
   
+  # Need to also extract {component}_foiacost and {component}_budget
   plot_data <- data %>%
     filter(Year %in% selected_years) %>%
-    select(Year, all_of(column_to_plot)) %>%
+    select(Year, all_of(c(column_to_plot))) %>%
     pivot_longer(cols = -Year, names_to = "Metric", values_to = "Value")
+  data_for_text <- data %>%
+    filter(Year %in% selected_years) %>%
+    select(Year, any_of(paste0(component, c("_foiacost", "_budget"))))
+  
+  # create column "XXX" if it doesn't exist for data_for_text
+  if (!(paste0(component, "_foiacost") %in% colnames(data_for_text))) {
+    data_for_text[["foiacost"]] <- ""
+  } else {
+    data_for_text[["foiacost"]] <- data_for_text[[paste0(component, "_foiacost")]] 
+  }
+  if (!(paste0(component, "_budget") %in% colnames(data_for_text))) {
+    data_for_text[["budget"]] <- ""
+  } else {
+    data_for_text[["budget"]] <- data_for_text[[paste0(component, "_budget")]]
+  }
+  
+  data_for_text <- data_for_text %>%
+    mutate(
+      cost_text = str_glue("FOIA Expenditures ($): {format(foiacost, format=\"d\", big.mark=\",\")}\nAgency Budgetary Resources ($): {format(budget, format=\"d\", big.mark=\",\")}")
+    )
+  
+  plot_data <- plot_data %>% 
+    left_join(data_for_text, by = "Year")
   
   # remove rows with missing values
   plot_data <- na.omit(plot_data)
   
   # Convert values to percentages
-  plot_data$Value <- plot_data$Value * 100
+  plot_data <- plot_data %>%
+    mutate(
+      Value = Value,
+      perc_formatted = format(Value*100, digits = 2, scientific = FALSE),
+      text = str_glue(
+        "Year: {Year}\nPercent: {perc_formatted}%\n{cost_text}")
+    )
   
   # Convert years to numeric
   selected_years <- as.numeric(selected_years)
   
   # Create a line plot using ggplot2
-  plot <- ggplot(plot_data, aes(x = Year, y = Value, color = Metric, group = Metric)) +
-    geom_point() +
+  plot <- ggplot(plot_data, aes(x = Year, y = Value*100, color = Metric)) +
+    geom_point(aes(text = text)) +
     geom_line() +
     labs(title = paste("FOIA Budget / Total Budget (%)"),
-         y = paste("FOIA/Total Budget (%)"),
+         y = paste("Percent Total Budget"),
          x = "Year") +
     theme_minimal() +
     theme(legend.position = "top") +
     scale_x_continuous(
       breaks = breaks_pretty(),
       limits = c(min(selected_years), max(selected_years))) +
-    scale_color_manual(values = set_names(line_color, column_to_plot))
+    scale_color_manual(values = set_names(line_color, column_to_plot)) +
+    scale_y_continuous(labels = function(x) paste0(format(x, scientific = FALSE), "%"))
   
-  return(ggplotly(plot))
+  return(ggplotly(plot, tooltip = "text"))
 }
 
 plot_backlog <- function(data, column_to_plot_backlog, selected_years, line_color = "#F8766D") {
@@ -213,7 +249,12 @@ plot_backlog <- function(data, column_to_plot_backlog, selected_years, line_colo
   plot_data <- data %>%
     filter(Year %in% selected_years) %>%
     select(Year, all_of(column_to_plot_backlog)) %>%
-    pivot_longer(cols = -Year, names_to = "Metric", values_to = "Value")
+    pivot_longer(cols = -Year, names_to = "Metric", values_to = "Value") %>%
+    mutate(
+      text = str_glue(
+        "Year: {Year}\nBacklogged Requests: {format(Value, format=\"d\", big.mark=\",\")}"
+      )
+    )
   
   # remove rows with missing values
   plot_data <- na.omit(plot_data)
@@ -223,7 +264,7 @@ plot_backlog <- function(data, column_to_plot_backlog, selected_years, line_colo
   
   # Create a line plot using ggplot2
   plot <- ggplot(plot_data, aes(x = Year, y = Value, color = Metric, group = Metric)) +
-    geom_point() +
+    geom_point(aes(text = text)) +
     geom_line() +
     labs(title = paste("Component Backlog"),
          y = paste("Backlogged Requests"),
@@ -235,22 +276,26 @@ plot_backlog <- function(data, column_to_plot_backlog, selected_years, line_colo
       limits = c(min(selected_years), max(selected_years))) +
     scale_color_manual(values = set_names(line_color, column_to_plot_backlog))
   
-  return(ggplotly(plot))
+  return(ggplotly(plot, tooltip = "text"))
 }
 
 plot_ratio_v_backlog <- function(
     filtered_data_b,
-    filtered_input_b_ratio,
-    filtered_input_b_backlog,
+    component,
     agencyBudget_year,
-    line_colors = c("red", "blue")
+    line_colors = c("red", "blue"),
+    plot_title = "Budgets Ratio vs. Backlogged Requests"
 ) {
+  
+  filtered_input_b_ratio <- str_glue("{component}_ratio")
+  filtered_input_b_backlog <- str_glue("{component}_backlog")
   
   if (filtered_input_b_ratio %in% colnames(filtered_data_b)){
     p1 <- plot_budget_ratio(
       filtered_data_b,
       filtered_input_b_ratio,
       agencyBudget_year,
+      component,
       line_color = line_colors[1])
     if (is.null(p1)) {
       p1 <- plot_no_data() %>%
@@ -279,7 +324,7 @@ plot_ratio_v_backlog <- function(
   }
   
   subplot(p1, p2, nrows = 2, shareX = TRUE, shareY = FALSE, titleY = TRUE) %>%
-    layout(title = "Budgets Ratio vs. Backlogged Requests")
+    layout(title = plot_title)
 }
 
 plot_no_data <- function() {

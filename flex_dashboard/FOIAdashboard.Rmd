@@ -52,14 +52,29 @@ source("functions.R")
 # https://github.com/rcds-dssv/foia_data_mining
 # After extraction, move the resulting .rds file to data/rds.
 # The .rds file should be saved as {agency}_data.rds
-agencies <- c("DHS", "DOI", "DOJ", "DOL", "DOS", "EPA",
-              "GSA", "HHS", "SEC", "VA" )
-
-# # Agencies for which budget data is available in CSV format.
-# Each .csv file should represent an agency.
-# The .csv files are saved in data/csv.
-# the .csv should be saved as {agency}_budget_ratio.csv
-agencies_budget <- c("DHS", "DOL", "DOJ", "HHS", "DOS")
+agencies <- c(
+  "Central Intelligence Agency" = "CIA",
+  "Department of Homeland Security" = "DHS",
+  "Department of Commerce" = "DOC",
+  "Department of Defense" = "DOD",
+  "Department of Education" = "ED",
+  "Department of Energy" = "DOE",
+  "Department of the Interior" = "DOI",
+  "Department of Health and Human Services" = "HHS",
+  "Department of Housing and Urban Development" = "HUD",
+  "Department of Justice" = "DOJ", 
+  "Department of Labor" = "DOL", 
+  "Department of State" = "DOS",
+  "Department of Transportation" = "DOT",
+  "Department of the Treasury" = "Treasury",  
+  "Department of Veterans Affairs" = "VA",
+  "Environmental Protection Agency" = "EPA",
+  "Federal Trade Commission" = "FTC",
+  "General Services Administration" = "GSA",
+  "Securities and Exchange Commission" = "SEC",
+  "Social Security Administration" = "SSA",
+  "U.S. Agency for International Development" = "USAID",  
+  "U.S. Department of Agriculture" = "USDA")
 
 # Dictionary mapping agencies to their subcomponents.
 # Used to populate component selection UI.
@@ -72,6 +87,50 @@ component_list <- list(
   "DOJ" = c("BOP", "Civil Rights", "DEA", "EOIR", "FBI", "OIG", "OIP"),
   "HHS" = c("ACF", "CDC", "CMS", "FDA", "NIH", "OIG", "OS"),
   "DOS" = c("DoS", "OIG")
+)
+
+# # Agencies for which budget data is available in CSV format.
+# Each .csv file should represent an agency.
+# The .csv files are saved in data/csv.
+# the .csv should be saved as {agency}_budget_ratio.csv
+agencies_budget <- c(
+  "Department of Homeland Security" = "DHS", 
+  "Department of Justice" = "DOJ", 
+  "Department of Labor" = "DOL", 
+  "Department of State" = "DOS", 
+  "Department of Health and Human Services" = "HHS"
+)
+
+# Dictionary mapping agencies to their subcomponents for budget data.
+# Used to populate component selection UI for budget plots.
+component_budget_list <- list(
+  "DHS" = c(
+    "Customs and Border Protection" = "CBP", 
+    "Office for Civil Rights and Civil Liberties" = "CRCL", 
+    "Immigrations and Customs Enforcement" = "ICE", 
+    "Department of Homeland Security Office of the Inspector General" = "OIG", 
+    "DHS Privacy Office" = "PRIV", 
+    "U.S. Citizenship and Immigration Services" = "USCIS"
+  ),
+  "DOL" = c(
+    "Department of Labor Security Office of the Inspector General" = "OIG", 
+    "Department of Labor Office of the Secretary" = "OSEC", 
+    "Occupational Safety and Health Administration" = "OSHA", 
+    "Wage and Hour Division" = "WHD"
+  ),
+  "DOJ" = c(
+    "Executive Office for Immigration Review" = "EOIR",
+    "Department of Justice Office of the Inspector General" = "OIG"
+  ),
+  "HHS" = c(
+    "Administration for Children and Families" = "ACF",
+    "Centers for Disease Control and Prevention" = "CDC",
+    "Health and Human Services Office of the Inspector General" = "OIG"
+  ),
+  "DOS" = c(
+    "Department of State Office of the Inspector General" = "OIG",
+    "Department of State" = "DoS"
+  )
 )
 
 # UI, data selection, plot output configuration ----------------------------
@@ -175,10 +234,15 @@ manual_title_list <- list(
     "AppealDispositionOtherQuantity" = "Appeals Closed for Other Reasons",
     "AppealDispositionTotalQuantity" = "Number of Appeals")
 )
+
+# Fiscal year range for the FOIA data.
+fiscal_year_range <- c(10, 23)
 ```
 
-```{r setup-foia-data}
-# functions to load the data. The data should be saved in the data/rds and
+```{r setup-foia}
+# Run specific functions and code necessary for the dashboard
+
+# Load the data. The data should be saved in the data/rds and
 # data/csv folder for FOIA and budget data, respectively.
 # Few things happen in the load functions. It reads the rds and csv files for the agencies
 # specified in the "agencies" and "agencies_budget" variables.
@@ -203,10 +267,10 @@ for (agency in agencies) {
     component_list[[agency]] <- extract_agency_components(master_foia_data[[agency]])
   }
 }
-
 ```
 
-FOIA Metrics
+
+Annual Report Data, 2010 -
 =====================================
 
 Inputs {.sidebar}
@@ -224,7 +288,7 @@ radioButtons(
 # UI for selecting the agency (e.g., DHS, EPA)
 selectInput(
   "agency_input",
-  "Agency", 
+  "Department", 
   choices =  agencies, 
   selected = "DHS")
 
@@ -238,7 +302,7 @@ selectInput(
 # UI for selecting one or more components (e.g., CBP, ICE)
 checkboxGroupInput(
   "component_input",
-  "Component",
+  "Agency",
   choices = component_list[["DHS"]], 
   selected = component_list[["DHS"]][c(1,2)])
 
@@ -246,9 +310,9 @@ checkboxGroupInput(
 sliderInput(
   "fy_input",
   "FY", 
-  min = 10, 
-  max = 23, 
-  value = c(10, 23), 
+  min = fiscal_year_range[1], 
+  max = fiscal_year_range[2], 
+  value = fiscal_year_range, 
   step = 1,
   sep = "")
 
@@ -310,7 +374,7 @@ observe({
   req(agency())
   comp_preselected_ <- if (length(component_list[[agency()]]) > 1) c(1,2) else 1
   updateCheckboxGroupInput(
-    session, "component_input", "Component",
+    session, "component_input", "Agency",
     choices = component_list[[agency()]],
     selected = component_list[[agency()]][comp_preselected_]
   )
@@ -343,7 +407,7 @@ renderPlotly({
 })
 ```
 
-Budgets
+Foia Budget / Agency Budget
 =====================================
 
 Inputs {.sidebar}
@@ -355,31 +419,36 @@ Inputs {.sidebar}
 # Dropdown to select agency for budget plots
 selectInput(
   "agency_input_b",
-  label = "Agency", 
+  label = "Department", 
   choices =  agencies_budget, 
   selected = "DHS")
 
 # Dropdown to select component (auto-updated based on agency)
 selectInput(
   "component_input_b",
-  label = "Component",
-  choices = component_list[["DHS"]], 
-  selected = component_list[["DHS"]][c(1,2)])
+  label = "Agency",
+  choices = component_budget_list[["DHS"]], 
+  selected = component_budget_list[["DHS"]][c(1,2)])
 
 # Choose type of plot to display: budget, budget vs backlog, or public affairs comparison
 radioButtons(
   "plot_input_b",
   label = "Plot",
-  choices = c("Budget", "Budget vs Backlog", "Public Affairs vs Budget"),
-  selected = "Budget")
+  # only has one selection for now... this can be modified when public affairs / 
+  # expenditures section is added
+  # choices = c("Budget" = "Budget", 
+  #             "Budgets Ratio and Backlogged Requests" = "Budget vs Backlog", 
+  #             "Public Affairs vs Budget"),
+  choices = c("Budgets Ratio and Backlogged Requests" = "budget_v_backlog"),
+  selected = "budget_v_backlog")
 
 # Fiscal year selector for budget plot
 sliderInput(
   "fy_input_b",
   "FY", 
-  min = 10, 
-  max = 23, 
-  value = c(10, 23), 
+  min = fiscal_year_range[1], 
+  max = fiscal_year_range[2], 
+  value = fiscal_year_range, 
   step = 1,
   sep = "")
 
@@ -412,7 +481,11 @@ agency_b <- reactive({
   input$agency_input_b
 })
 component_b <- reactive({
-  input$component_input_b
+  if (input$component_input_b == "DoS") {
+    return("DOS_main")
+  } else {
+    return(input$component_input_b)
+  }
 })
 fy_b <- reactive({
   input$fy_input_b[1]:input$fy_input_b[2]
@@ -428,46 +501,14 @@ filtered_data_b <- reactive({
 observe({
   req(agency_b())
   updateSelectInput(
-    session, "component_input_b", "Component",
-    choices = component_list[[agency_b()]],
-    selected = component_list[[agency_b()]][1]
+    session, "component_input_b", "Agency",
+    choices = component_budget_list[[agency_b()]],
+    selected = component_budget_list[[agency_b()]][1]
   )
 })
 
-# Helper functions to generate column names for selected component's budget, ratio, and backlog.
 # budget
-filtered_input_b <- reactive({
-  component <- component_b()
-  
-  if (component == "DoS") {
-    component <- "DOS_main"
-  }
-  
-  column_to_plot <- paste0(component, "_budget")
-  return(column_to_plot)
-})
-# ratio
-filtered_input_b_ratio <- reactive({
-  component <- component_b()
-  
-  if (component == "DoS") {
-    component <- "DOS_main"
-  }
-  
-  column_to_plot <- paste0(component, "_ratio")
-  return(column_to_plot)
-})
-# backlog
-filtered_input_b_backlog <- reactive({
-  component <- component_b()
-  
-  if (component == "DoS") {
-    component <- "DOS_main"
-  }
-  
-  column_to_plot <- paste0(component, "_backlog")
-  return(column_to_plot)
-})
+filtered_input_b <- reactive(paste0(component_b(), "_budget"))
 
 # Fiscal years as character vector formatted to match column headers in budget data.
 agencyBudget_year <- reactive({
@@ -497,14 +538,20 @@ budget_plot <- reactive({
   }
 })
 
+# create ratio vs backlog plot title
+ratio_v_backlog_title <- reactive({
+  comp_names <- component_budget_list[[agency_b()]]
+  names(comp_names)[comp_names == input$component_input_b]
+})
+
 # Plot comparing budget ratio vs backlog
 budget_v_backlot_plot <- reactive({
   plot_ratio_v_backlog(
     filtered_data_b(),
-    filtered_input_b_ratio(),
-    filtered_input_b_backlog(),
+    component_b(),
     agencyBudget_year(),
-    line_colors = RColorBrewer::brewer.pal(4, "Dark2")[c(1,2)]
+    line_colors = RColorBrewer::brewer.pal(4, "Dark2")[c(1,2)],
+    plot_title = ratio_v_backlog_title()
   )
 })
 
@@ -512,7 +559,7 @@ budget_v_backlot_plot <- reactive({
 renderPlotly({
   if (input$plot_input_b == "Budget") {
     budget_plot()
-  } else if (input$plot_input_b == "Budget vs Backlog") {
+  } else if (input$plot_input_b == "budget_v_backlog") {
     budget_v_backlot_plot()
   } else {
     ggplotly(ggplot() + geom_blank() + 
