@@ -432,13 +432,15 @@ selectInput(
 # Choose type of plot to display: budget, budget vs backlog, or public affairs comparison
 radioButtons(
   "plot_input_b",
-  label = "Plot",
+  label = "Plot Type",
   # only has one selection for now... this can be modified when public affairs / 
   # expenditures section is added
   # choices = c("Budget" = "Budget", 
   #             "Budgets Ratio and Backlogged Requests" = "budget_v_backlog", 
   #             "Public Affairs vs Budget" = "publicaffairs_v_budget"),
-  choices = c("Budgets Ratio and Backlogged Requests" = "budget_v_backlog"),
+  choices = c(
+    "Budgets Ratio and Backlogged Requests" = "budget_v_backlog"
+  ),
   selected = "budget_v_backlog")
 
 # Fiscal year selector for budget plot
@@ -469,7 +471,7 @@ HTML(
   ")
 ```
 
-Row {data-height=400}
+Row {data-height=400 .tabset .tabset-fade}
 -------------------------------------
 
 ### Plot - Select Plot Using Sidebar
@@ -562,7 +564,6 @@ publicaffairs_ratio_plot <- reactive({
   )
 })
 
-# Renders the selected plot based on radio button input
 renderPlotly({
   if (input$plot_input_b == "Budget") {
     budget_plot()
@@ -571,16 +572,14 @@ renderPlotly({
   } else if (input$plot_input_b == "publicaffairs_v_budget") {
     publicaffairs_ratio_plot()
   } else {
-    ggplotly(ggplot() + geom_blank() + 
+    ggplotly(ggplot() + geom_blank() +
       ggtitle("No data available for this agency/component."))
   }
 })
 ```
 
-Row {data-height=200}
--------------------------------------
 
-### Table
+### Table - Scroll sideways to view more data
 
 ```{r}
 # Renders the raw budget data table with improved formatting
@@ -598,7 +597,7 @@ renderDT(datatable(
     # more compact row
     rowCallback = JS(
         "function(row, data, index) {",
-        "  $('td', row).css({'padding-top': '4px', 'padding-bottom': '4px', 'line-height': '1'});",
+        "  $('td', row).css({'padding-top': '4px', 'padding-bottom': '4px', 'line-height': '2'});",
         "}"
       )
   )
