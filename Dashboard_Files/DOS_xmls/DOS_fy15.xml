@@ -14,7 +14,7 @@
 	<nc:DocumentDescriptionText>FOIA Annual Report</nc:DocumentDescriptionText>
 	<nc:Organization s:id="ORG0">
 		<nc:OrganizationAbbreviationText>State</nc:OrganizationAbbreviationText>
-		<nc:OrganizationName>U.S. Department of State</nc:OrganizationName>
+		<nc:OrganizationName>Department of State</nc:OrganizationName>
 		<nc:OrganizationSubUnit s:id="ORG1">
 			<nc:OrganizationAbbreviationText>DoS</nc:OrganizationAbbreviationText>
 			<nc:OrganizationName>Department of State</nc:OrganizationName>
