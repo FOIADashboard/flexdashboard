@@ -13,10 +13,10 @@
 	</nc:DocumentCreationDate>
 	<nc:DocumentDescriptionText>FOIA Annual Report</nc:DocumentDescriptionText>
 	<nc:Organization s:id="ORG0">
-		<nc:OrganizationAbbreviationText>DOS</nc:OrganizationAbbreviationText>
-		<nc:OrganizationName>U.S. Department of State</nc:OrganizationName>
+		<nc:OrganizationAbbreviationText>State</nc:OrganizationAbbreviationText>
+		<nc:OrganizationName>Department of State</nc:OrganizationName>
 		<nc:OrganizationSubUnit s:id="ORG1">
-			<nc:OrganizationAbbreviationText>DOS - Main</nc:OrganizationAbbreviationText>
+			<nc:OrganizationAbbreviationText>DoS</nc:OrganizationAbbreviationText>
 			<nc:OrganizationName>Department of State</nc:OrganizationName>
 		</nc:OrganizationSubUnit>
 		<nc:OrganizationSubUnit s:id="ORG2">

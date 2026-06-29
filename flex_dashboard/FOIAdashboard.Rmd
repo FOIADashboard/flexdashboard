@@ -235,7 +235,7 @@ manual_title_list <- list(
 )
 
 # Fiscal year range for the FOIA data.
-fiscal_year_range <- c(10, 23)
+fiscal_year_range <- c(10, 25)
 ```
 
 ```{r setup-foia}
@@ -305,7 +305,7 @@ checkboxGroupInput(
   choices = component_list[["DHS"]], 
   selected = component_list[["DHS"]][c(1,2)])
 
-# UI for selecting a range of fiscal years (FY10 to FY23)
+# UI for selecting a range of fiscal years (FY10 to FY25)
 sliderInput(
   "fy_input",
   "FY", 
